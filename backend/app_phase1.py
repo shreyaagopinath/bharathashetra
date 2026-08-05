@@ -45,16 +45,18 @@ def create_app():
     secret_key = 'bharathashetra-secret-key-production-2024'
     jwt_secret = 'bharathashetra-jwt-secret-production-2024'
 
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', secret_key)
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', jwt_secret)
+    # FORCE set secrets - no environment variable checking
+    app.config['SECRET_KEY'] = secret_key
+    app.config['JWT_SECRET_KEY'] = jwt_secret
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
 
-    # Initialize extensions WITH app context
+    # Initialize extensions
     db.init_app(app)
-
-    # Explicitly set JWT config before init
-    app.config.update(JWT_SECRET_KEY=app.config['JWT_SECRET_KEY'])
     jwt.init_app(app)
+
+    # Verify secrets are set
+    assert app.config['JWT_SECRET_KEY'], "JWT_SECRET_KEY not set!"
+    assert app.config['SECRET_KEY'], "SECRET_KEY not set!"
 
     # Import models BEFORE creating tables
     from models import (
