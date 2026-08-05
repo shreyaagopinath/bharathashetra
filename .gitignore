@@ -28,3 +28,6 @@ wheels/
 .idea/
 *.db
 *.db.bak
+*.db-journal
+*.sqlite
+*.sqlite3
