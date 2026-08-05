@@ -34,8 +34,8 @@ def create_app():
         db_uri = f'sqlite:///{DATABASE_PATH}'
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'bharathashetra-secret-key-dev-2024')
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'bharathashetra-jwt-secret-key-dev-2024')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)  # 30 days for persistent login
 
     # Initialize extensions
