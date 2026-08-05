@@ -110,12 +110,16 @@ def create_app():
     app.register_blueprint(announcements_bp, url_prefix='/api/announcements')
     app.register_blueprint(videos_bp, url_prefix='/api/videos')
 
-    # Create tables and setup
+    # Create tables and seed the default admin.
+    #
+    # This must never raise: if the database is briefly unreachable at boot the
+    # worker would exit(1) and the whole deploy would be marked failed, taking
+    # the site down instead of just the DB-backed parts. We record the failure
+    # and surface it on /api/health instead.
+    app.config['DB_INIT_ERROR'] = None
     with app.app_context():
-        db.create_all()
-
-        # Create default admin if it doesn't exist
         try:
+            db.create_all()
             admin_exists = db.session.query(User).filter_by(role='admin').first()
             if not admin_exists:
                 admin = User(email='admin@dance.local', role='admin')
@@ -123,31 +127,62 @@ def create_app():
                 db.session.add(admin)
                 db.session.commit()
                 print("✓ Created default admin: admin@dance.local / Admin123!")
+            print("✓ Database ready")
         except Exception as e:
-            print(f"Note: Could not create default admin: {e}")
+            msg = str(e)
+            app.config['DB_INIT_ERROR'] = msg[:500]
+            print("=" * 70)
+            print("✗ DATABASE INIT FAILED - app will start, but data features are down")
+            print(f"  {msg[:400]}")
+            if 'Network is unreachable' in msg or 'could not translate host' in msg:
+                print("  HINT: Supabase's direct host (db.<ref>.supabase.co) is IPv6-only")
+                print("        and Render has no outbound IPv6. Use the Supavisor pooler:")
+                print("        postgresql://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:5432/postgres")
+            print("=" * 70)
 
     # API Health check + storage diagnostics (no credentials exposed)
     @app.route('/api/health', methods=['GET'])
     def health():
+        import re as _re
         uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
         engine = 'postgresql' if uri.startswith('postgres') else 'sqlite'
+
+        # Host only - never the password
+        host = None
+        m = _re.search(r'@([^/:]+)', uri)
+        if m:
+            host = m.group(1)
+
         info = {
             'status': 'ok',
             'phase': 'phase-1',
             'db_engine': engine,
             'persistent': engine == 'postgresql',
             'database_url_env_set': bool(os.getenv('DATABASE_URL')),
+            'db_host': host,
+            'using_supavisor_pooler': bool(host and 'pooler.supabase.com' in host),
         }
+
+        if app.config.get('DB_INIT_ERROR'):
+            info['db_init_error'] = app.config['DB_INIT_ERROR']
+
         try:
             from models import Student
             info['student_count'] = db.session.query(Student).count()
+            info['db_connected'] = True
         except Exception as e:
             info['student_count'] = None
-            info['db_error'] = str(e)[:200]
+            info['db_connected'] = False
+            info['db_error'] = str(e)[:300]
+
         if engine == 'sqlite':
             info['warning'] = ('Using SQLite on an ephemeral disk - all data is erased whenever '
                                'the server restarts or redeploys. Set DATABASE_URL to a PostgreSQL '
                                'connection string to make data persist.')
+        elif host and host.startswith('db.') and host.endswith('.supabase.co'):
+            info['warning'] = ('Using the Supabase DIRECT host, which resolves to IPv6 only. '
+                               'Render cannot reach it. Switch DATABASE_URL to the Supavisor '
+                               'pooler host (aws-0-<region>.pooler.supabase.com).')
         return info, 200
 
     # Serve frontend files
