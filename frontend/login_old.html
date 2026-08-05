@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Bharathashetra School of Dance</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cr: #8B1A1A;
+  --dcr: #5C0E0E;
+  --go: #C9993A;
+  --bgo: #E8B84B;
+  --pg: #F5E6C0;
+  --cr2: #FAF3E0;
+  --dk: #1A0A0A;
+  --dk2: #2C1810;
+  --rd: #D46060;
+  --br: rgba(201, 153, 58, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--dk);
+  color: var(--cr2);
+  font-family: 'Cormorant Garamond', serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(139, 26, 26, 0.14) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 80%, rgba(201, 153, 58, 0.09) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.plw {
+  position: relative;
+  z-index: 1;
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.pll {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: clamp(15px, 3vw, 21px);
+  color: var(--bgo);
+  margin-bottom: 5px;
+  text-shadow: 0 0 30px rgba(232, 184, 75, 0.3);
+}
+
+.plt {
+  font-style: italic;
+  color: rgba(245, 230, 192, 0.38);
+  font-size: 12px;
+  margin-bottom: 32px;
+  letter-spacing: 2px;
+}
+
+.plc {
+  background: linear-gradient(135deg, rgba(44, 24, 16, 0.58), rgba(26, 10, 10, 0.78));
+  border: 1px solid var(--br);
+  border-radius: 11px;
+  padding: 26px;
+  position: relative;
+}
+
+.plc::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--go), transparent);
+  border-radius: 11px 11px 0 0;
+}
+
+.fg {
+  margin-bottom: 14px;
+}
+
+.fl {
+  display: block;
+  font-family: 'Raleway', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(245, 230, 192, 0.48);
+  margin-bottom: 6px;
+}
+
+.fi {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  padding: 9px 13px;
+  color: var(--cr2);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.fi::placeholder {
+  color: rgba(245, 230, 192, 0.24);
+}
+
+.fi:focus {
+  border-color: var(--bgo);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 12px;
+  color: rgba(245, 230, 192, 0.65);
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.bpri {
+  width: 100%;
+  padding: 9px 20px;
+  background: linear-gradient(135deg, var(--cr), var(--dcr));
+  border: 1px solid rgba(201, 153, 58, 0.3);
+  border-radius: 6px;
+  color: var(--pg);
+  font-family: 'Raleway', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 15px;
+}
+
+.bpri:hover {
+  background: linear-gradient(135deg, #A02020, var(--cr));
+  transform: translateY(-1px);
+}
+
+.perr {
+  color: var(--rd);
+  font-size: 13px;
+  font-style: italic;
+  margin-top: 9px;
+  min-height: 18px;
+  display: none;
+}
+
+.perr.show {
+  display: block;
+}
+
+.api-settings {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(201, 153, 58, 0.1);
+}
+
+.api-settings label {
+  font-size: 11px;
+  color: rgba(245, 230, 192, 0.5);
+}
+
+.api-settings input {
+  font-size: 11px;
+}
+
+.info-text {
+  font-size: 12px;
+  color: rgba(245, 230, 192, 0.55);
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #2C1810, #1A0A0A);
+  border: 1px solid rgba(201, 153, 58, 0.3);
+  border-radius: 8px;
+  padding: 11px 16px;
+  color: var(--pg);
+  font-size: 13px;
+  z-index: 300;
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  max-width: 280px;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+<div class="plw">
+  <div class="pll">Bharathashetra</div>
+  <div class="plt">School of Dance — Parent & Admin Portal</div>
+  <div class="plc">
+    <div class="info-text">Enter your email from the registration form. First login creates your password.</div>
+
+    <!-- Login Form (Email Only) -->
+    <form id="loginForm">
+      <div class="fg">
+        <label class="fl">Email</label>
+        <input class="fi" id="loginEmail" type="email" placeholder="your@email.com" required>
+      </div>
+      <div class="fg">
+        <label class="fl" id="passwordLabel">Password</label>
+        <input class="fi" id="loginPassword" type="password" placeholder="••••••••" required>
+      </div>
+      <div class="checkbox-group">
+        <input type="checkbox" id="rememberMe">
+        <label for="rememberMe">Stay logged in for 30 days</label>
+      </div>
+      <button type="submit" class="bpri" id="loginBtn">Sign In</button>
+      <div class="perr" id="loginErr"></div>
+    </form>
+
+    <!-- API Settings -->
+    <div class="api-settings">
+      <div class="fg">
+        <label class="fl">API URL</label>
+        <input class="fi" id="apiUrl" type="text" value="http://localhost:5000/api" placeholder="http://localhost:5000/api">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+// Check if already logged in
+if (Auth.isAuthenticated()) {
+  window.location.href = '/index.html';
+}
+
+// Save API URL
+document.getElementById('apiUrl').addEventListener('change', (e) => {
+  localStorage.setItem('apiUrl', e.target.value);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedUrl = localStorage.getItem('apiUrl');
+  if (savedUrl) {
+    document.getElementById('apiUrl').value = savedUrl;
+  }
+
+  // Check if user previously enabled "stay logged in"
+  const rememberMe = localStorage.getItem('rememberMe') === 'true';
+  document.getElementById('rememberMe').checked = rememberMe;
+});
+
+// Login handler
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const rememberMe = document.getElementById('rememberMe').checked;
+  const errEl = document.getElementById('loginErr');
+
+  try {
+    // Try login first
+    await Auth.login(email, password);
+
+    // Save "remember me" preference
+    localStorage.setItem('rememberMe', rememberMe);
+    if (rememberMe) {
+      localStorage.setItem('loginTimeout', Date.now() + (30 * 24 * 60 * 60 * 1000)); // 30 days
+    }
+
+    window.location.href = '/index.html';
+  } catch (error) {
+    // If login fails, assume first login - need to register
+    if (error.message.includes('Invalid') || error.message.includes('not found')) {
+      // Switch to "set password" mode for first login
+      document.getElementById('passwordLabel').textContent = 'Create Password';
+      document.getElementById('loginBtn').textContent = 'Set Password & Login';
+
+      try {
+        await Auth.register(email, password, email.split('@')[0], '');
+        localStorage.setItem('rememberMe', rememberMe);
+        if (rememberMe) {
+          localStorage.setItem('loginTimeout', Date.now() + (30 * 24 * 60 * 60 * 1000));
+        }
+        window.location.href = '/index.html';
+      } catch (regError) {
+        errEl.textContent = regError.message;
+        errEl.classList.add('show');
+      }
+    } else {
+      errEl.textContent = error.message;
+      errEl.classList.add('show');
+    }
+  }
+});
+</script>
+</body>
+</html>

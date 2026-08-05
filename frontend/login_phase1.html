@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Bharathashetra School of Dance</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cr: #8B1A1A;
+  --dcr: #5C0E0E;
+  --go: #C9993A;
+  --bgo: #E8B84B;
+  --pg: #F5E6C0;
+  --cr2: #FAF3E0;
+  --dk: #1A0A0A;
+  --dk2: #2C1810;
+  --rd: #D46060;
+  --br: rgba(201, 153, 58, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--dk);
+  color: var(--cr2);
+  font-family: 'Cormorant Garamond', serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(139, 26, 26, 0.14) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 80%, rgba(201, 153, 58, 0.09) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.plw {
+  position: relative;
+  z-index: 1;
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.pll {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: clamp(15px, 3vw, 21px);
+  color: var(--bgo);
+  margin-bottom: 5px;
+  text-shadow: 0 0 30px rgba(232, 184, 75, 0.3);
+}
+
+.plt {
+  font-style: italic;
+  color: rgba(245, 230, 192, 0.38);
+  font-size: 12px;
+  margin-bottom: 32px;
+  letter-spacing: 2px;
+}
+
+.plc {
+  background: linear-gradient(135deg, rgba(44, 24, 16, 0.58), rgba(26, 10, 10, 0.78));
+  border: 1px solid var(--br);
+  border-radius: 11px;
+  padding: 26px;
+  position: relative;
+}
+
+.plc::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--go), transparent);
+  border-radius: 11px 11px 0 0;
+}
+
+.mode-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--br);
+  border-radius: 5px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.mode-toggle button {
+  flex: 1;
+  padding: 7px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: none;
+  background: transparent;
+  color: rgba(245, 230, 192, 0.38);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-toggle button.active {
+  background: rgba(201, 153, 58, 0.14);
+  color: var(--bgo);
+}
+
+.login-mode {
+  display: none;
+}
+
+.login-mode.active {
+  display: block;
+}
+
+.fg {
+  margin-bottom: 14px;
+}
+
+.fl {
+  display: block;
+  font-family: 'Raleway', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(245, 230, 192, 0.48);
+  margin-bottom: 6px;
+}
+
+.fi {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  padding: 9px 13px;
+  color: var(--cr2);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.fi::placeholder {
+  color: rgba(245, 230, 192, 0.24);
+}
+
+.fi:focus {
+  border-color: var(--bgo);
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 12px;
+  color: rgba(245, 230, 192, 0.65);
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.bpri {
+  width: 100%;
+  padding: 9px 20px;
+  background: linear-gradient(135deg, var(--cr), var(--dcr));
+  border: 1px solid rgba(201, 153, 58, 0.3);
+  border-radius: 6px;
+  color: var(--pg);
+  font-family: 'Raleway', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 15px;
+}
+
+.bpri:hover {
+  background: linear-gradient(135deg, #A02020, var(--cr));
+  transform: translateY(-1px);
+}
+
+.perr {
+  color: var(--rd);
+  font-size: 13px;
+  font-style: italic;
+  margin-top: 9px;
+  min-height: 18px;
+  display: none;
+}
+
+.perr.show {
+  display: block;
+}
+
+.info-text {
+  font-size: 12px;
+  color: rgba(245, 230, 192, 0.55);
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div class="plw">
+  <div class="pll">Bharathashetra</div>
+  <div class="plt">School of Dance — Parent & Admin Portal</div>
+  <div class="plc">
+    <!-- Mode Toggle -->
+    <div class="mode-toggle">
+      <button class="active" onclick="setLoginMode('parent')">Parent Login</button>
+      <button onclick="setLoginMode('admin')">Admin</button>
+    </div>
+
+    <!-- PARENT LOGIN -->
+    <div class="login-mode active" id="parentMode">
+      <div class="info-text">Enter your email and 4-digit PIN.</div>
+      <form id="parentForm">
+        <div class="fg">
+          <label class="fl">Email</label>
+          <input class="fi" id="parentEmail" type="email" placeholder="your@email.com" required>
+        </div>
+        <div class="fg">
+          <label class="fl">PIN (4 digits)</label>
+          <input class="fi" id="parentPin" type="text" placeholder="0000" maxlength="4" pattern="[0-9]{4}" required>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="parentRemember">
+          <label for="parentRemember">Stay logged in</label>
+        </div>
+        <button type="submit" class="bpri">Sign In</button>
+        <div class="perr" id="parentErr"></div>
+      </form>
+    </div>
+
+    <!-- ADMIN LOGIN -->
+    <div class="login-mode" id="adminMode">
+      <div class="info-text">Admin access only.</div>
+      <form id="adminForm">
+        <div class="fg">
+          <label class="fl">Email</label>
+          <input class="fi" id="adminEmail" type="email" placeholder="admin@email.com" required>
+        </div>
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input class="fi" id="adminPassword" type="password" placeholder="••••••••" required>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="adminRemember">
+          <label for="adminRemember">Stay logged in</label>
+        </div>
+        <button type="submit" class="bpri">Admin Sign In</button>
+        <div class="perr" id="adminErr"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:8000/api';
+
+// Check if already logged in
+if (localStorage.getItem('authToken')) {
+  window.location.href = '/index.html';
+}
+
+function setLoginMode(mode) {
+  document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.login-mode').forEach(m => m.classList.remove('active'));
+
+  if (mode === 'parent') {
+    document.querySelector('.mode-toggle button:nth-child(1)').classList.add('active');
+    document.getElementById('parentMode').classList.add('active');
+  } else {
+    document.querySelector('.mode-toggle button:nth-child(2)').classList.add('active');
+    document.getElementById('adminMode').classList.add('active');
+  }
+}
+
+// Parent Login
+document.getElementById('parentForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('parentEmail').value;
+  const pin = document.getElementById('parentPin').value;
+  const errEl = document.getElementById('parentErr');
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/parent-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, pin })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Login failed');
+
+    localStorage.setItem('authToken', data.access_token);
+    localStorage.setItem('userId', data.user_id);
+    localStorage.setItem('userRole', data.role);
+    window.location.href = '/index.html';
+  } catch (error) {
+    errEl.textContent = error.message;
+    errEl.classList.add('show');
+  }
+});
+
+// Admin Login
+document.getElementById('adminForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('adminEmail').value;
+  const password = document.getElementById('adminPassword').value;
+  const errEl = document.getElementById('adminErr');
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/admin-login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Login failed');
+
+    localStorage.setItem('authToken', data.access_token);
+    localStorage.setItem('userId', data.user_id);
+    localStorage.setItem('userRole', data.role);
+    window.location.href = '/index.html';
+  } catch (error) {
+    errEl.textContent = error.message;
+    errEl.classList.add('show');
+  }
+});
+</script>
+</body>
+</html>

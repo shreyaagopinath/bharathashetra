@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Bharathashetra School of Dance</title>
+<!-- PWA Meta Tags -->
+<meta name="application-name" content="Bharathashetra">
+<meta name="description" content="Bharathashetra School of Dance — parent & student portal">
+<meta name="theme-color" content="#1A0A0A">
+<meta name="background-color" content="#1A0A0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bharathashetra">
+<meta name="msapplication-TileColor" content="#1A0A0A">
+<meta name="msapplication-tap-highlight" content="no">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cr: #8B1A1A;
+  --dcr: #5C0E0E;
+  --go: #C9993A;
+  --bgo: #E8B84B;
+  --pg: #F5E6C0;
+  --cr2: #FAF3E0;
+  --dk: #1A0A0A;
+  --dk2: #2C1810;
+  --gn: #4CAF8A;
+  --am: #E8A838;
+  --rd: #D46060;
+  --br: rgba(201, 153, 58, 0.2);
+  --br2: rgba(201, 153, 58, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--dk);
+  color: var(--cr2);
+  font-family: 'Cormorant Garamond', serif;
+  min-height: 100vh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(139, 26, 26, 0.14) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 80%, rgba(201, 153, 58, 0.09) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+}
+
+header {
+  background: linear-gradient(180deg, rgba(92, 14, 14, 0.97), rgba(26, 10, 10, 0.99));
+  border-bottom: 1px solid var(--br);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.htop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 26px;
+  gap: 12px;
+}
+
+.horn {
+  display: flex;
+  align-items: center;
+  opacity: 0.85;
+}
+
+.hctr {
+  text-align: center;
+  flex: 1;
+}
+
+.sname {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: clamp(12px, 2vw, 18px);
+  color: var(--bgo);
+  letter-spacing: 2px;
+  text-shadow: 0 0 30px rgba(232, 184, 75, 0.4);
+  line-height: 1.3;
+}
+
+.ssub {
+  font-style: italic;
+  font-size: 11px;
+  color: rgba(245, 230, 192, 0.55);
+  letter-spacing: 3px;
+  margin-top: 2px;
+}
+
+.hbdr {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--go), var(--bgo), var(--go), transparent);
+  opacity: 0.5;
+}
+
+.vsw {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--br);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.vsw button {
+  padding: 6px 13px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: none;
+  background: transparent;
+  color: rgba(245, 230, 192, 0.4);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.vsw button.active {
+  background: rgba(201, 153, 58, 0.15);
+  color: var(--bgo);
+}
+
+.lout {
+  padding: 5px 11px;
+  background: transparent;
+  border: 1px solid rgba(139, 26, 26, 0.4);
+  border-radius: 4px;
+  color: var(--rd);
+  font-family: 'Raleway', sans-serif;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.anav {
+  display: flex;
+  flex-wrap: wrap;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid var(--br2);
+}
+
+.anav button {
+  flex: 1 1 auto;
+  padding: 9px 10px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(245, 230, 192, 0.45);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  white-space: nowrap;
+  text-align: center;
+  min-width: 0;
+}
+
+.anav button:hover {
+  color: var(--bgo);
+}
+
+.anav button.active {
+  color: var(--bgo);
+  border-bottom-color: var(--bgo);
+  background: rgba(201, 153, 58, 0.07);
+}
+
+.dnav {
+  display: flex;
+  padding: 0 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dnav::-webkit-scrollbar {
+  display: none;
+}
+
+.dtab {
+  padding: 7px 14px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(245, 230, 192, 0.38);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.dtab.active {
+  color: var(--bgo);
+  border-bottom-color: var(--go);
+}
+
+main {
+  padding: 22px 20px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.sec {
+  display: none;
+  animation: fadeUp 0.4s ease;
+}
+
+.sec.active {
+  display: block;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pgh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pgt {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: 16px;
+  color: var(--bgo);
+}
+
+.pgs {
+  font-style: italic;
+  font-size: 13px;
+  color: rgba(245, 230, 192, 0.44);
+  margin-top: 2px;
+}
+
+.srow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.sc {
+  background: linear-gradient(135deg, rgba(92, 14, 14, 0.38), rgba(26, 10, 10, 0.58));
+  border: 1px solid var(--br);
+  border-radius: 8px;
+  padding: 13px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.sc::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--go), transparent);
+}
+
+.sn {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: 24px;
+  color: var(--bgo);
+  display: block;
+}
+
+.sl {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(245, 230, 192, 0.44);
+  font-family: 'Raleway', sans-serif;
+  margin-top: 3px;
+}
+
+.sc.sp .sn { color: var(--gn); }
+.sc.sl2 .sn { color: var(--am); }
+.sc.su .sn { color: var(--rd); }
+
+.mrow {
+  display: flex;
+  gap: 7px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 3px;
+}
+
+.mrow::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  padding: 5px 13px;
+  border-radius: 20px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: 1px solid var(--br);
+  background: transparent;
+  color: rgba(245, 230, 192, 0.44);
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.chip:hover {
+  border-color: var(--go);
+  color: var(--bgo);
+}
+
+.chip.active {
+  background: rgba(201, 153, 58, 0.14);
+  border-color: var(--go);
+  color: var(--bgo);
+}
+
+.dv {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0 16px;
+  opacity: 0.33;
+}
+
+.dv::before {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--go));
+}
+
+.dv::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--go), transparent);
+}
+
+.dvs {
+  color: var(--go);
+  font-size: 12px;
+  letter-spacing: 4px;
+}
+
+.ctrl {
+  display: flex;
+  gap: 9px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.sb {
+  flex: 1;
+  min-width: 170px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  padding: 9px 13px;
+  color: var(--cr2);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.sb::placeholder {
+  color: rgba(245, 230, 192, 0.28);
+}
+
+.sb:focus {
+  border-color: var(--go);
+}
+
+.fs {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--br);
+  border-radius: 6px;
+  padding: 9px 13px;
+  color: var(--cr2);
+  font-family: 'Raleway', sans-serif;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+
+.fs option {
+  background: #2C1810;
+}
+
+.tw {
+  background: linear-gradient(180deg, rgba(44, 24, 16, 0.38), rgba(26, 10, 10, 0.58));
+  border: 1px solid rgba(201, 153, 58, 0.13);
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.th-row {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr 0.85fr 0.85fr 1.1fr;
+  padding: 10px 17px;
+  background: rgba(92, 14, 14, 0.48);
+  border-bottom: 1px solid rgba(201, 153, 58, 0.2);
+}
+
+.th {
+  font-family: 'Raleway', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--go);
+}
+
+.tr {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr 0.85fr 0.85fr 1.1fr;
+  padding: 12px 17px;
+  border-bottom: 1px solid rgba(201, 153, 58, 0.06);
+  transition: background 0.2s;
+  align-items: center;
+}
+
+.tr:last-child {
+  border-bottom: none;
+}
+
+.tr:hover {
+  background: rgba(201, 153, 58, 0.04);
+}
+
+.snm {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--pg);
+}
+
+.spr {
+  font-size: 11px;
+  color: rgba(245, 230, 192, 0.38);
+  margin-top: 2px;
+  font-style: italic;
+}
+
+.ctm {
+  font-size: 12px;
+  color: rgba(245, 230, 192, 0.55);
+  font-family: 'Raleway', sans-serif;
+}
+
+.bdg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.bp { background: rgba(45, 106, 79, 0.2); border: 1px solid rgba(45, 106, 79, 0.5); color: var(--gn); }
+.bpnd { background: rgba(183, 101, 10, 0.25); color: #f2a83e; border-color: rgba(242, 168, 62, 0.35); }
+.bl { background: rgba(183, 101, 10, 0.2); border: 1px solid rgba(183, 101, 10, 0.5); color: var(--am); }
+.bu { background: rgba(139, 26, 26, 0.2); border: 1px solid rgba(139, 26, 26, 0.4); color: var(--rd); }
+.bpr { background: rgba(45, 106, 79, 0.2); border: 1px solid rgba(45, 106, 79, 0.5); color: var(--gn); }
+.bab { background: rgba(139, 26, 26, 0.2); border: 1px solid rgba(139, 26, 26, 0.4); color: var(--rd); }
+
+.btn { padding: 5px 11px; border-radius: 4px; font-family: 'Raleway', sans-serif; font-size: 9px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border: 1px solid; transition: all 0.2s; }
+.bpd { background: rgba(45, 106, 79, 0.15); border-color: rgba(45, 106, 79, 0.5); color: var(--gn); }
+.bpd:hover { background: rgba(45, 106, 79, 0.3); }
+.brc { background: rgba(201, 153, 58, 0.1); border-color: rgba(201, 153, 58, 0.3); color: var(--go); margin-left: 4px; }
+.brc:hover { background: rgba(201, 153, 58, 0.2); }
+.bun { background: rgba(139, 26, 26, 0.15); border-color: rgba(139, 26, 26, 0.4); color: var(--rd); }
+.bun:hover { background: rgba(139, 26, 26, 0.3); }
+
+.bpri { padding: 9px 20px; background: linear-gradient(135deg, var(--cr), var(--dcr)); border: 1px solid rgba(201, 153, 58, 0.3); border-radius: 6px; color: var(--pg); font-family: 'Raleway', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.bpri:hover { background: linear-gradient(135deg, #A02020, var(--cr)); transform: translateY(-1px); }
+
+.bsec { padding: 9px 20px; background: transparent; border: 1px solid var(--br); border-radius: 6px; color: rgba(245, 230, 192, 0.5); font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.bsec:hover { border-color: var(--go); color: var(--pg); }
+
+.bgld { padding: 9px 20px; background: rgba(201, 153, 58, 0.2); border: 1px solid rgba(201, 153, 58, 0.5); border-radius: 6px; color: var(--bgo); font-family: 'Raleway', sans-serif; font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+.bgld:hover { background: rgba(201, 153, 58, 0.35); }
+
+.lds { text-align: center; padding: 45px 20px; color: rgba(245, 230, 192, 0.38); }
+.spin { width: 32px; height: 32px; border: 2px solid rgba(201, 153, 58, 0.14); border-top-color: var(--go); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.emp { text-align: center; padding: 45px 20px; color: rgba(245, 230, 192, 0.28); }
+.err { text-align: center; padding: 45px 20px; color: rgba(212, 96, 96, 0.65); }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #2C1810, #1A0A0A); border: 1px solid rgba(201, 153, 58, 0.3); border-radius: 8px; padding: 11px 16px; color: var(--pg); font-size: 13px; z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 280px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5); }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+.fg { margin-bottom: 14px; }
+.fl { display: block; font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(245, 230, 192, 0.48); margin-bottom: 6px; }
+.fi { width: 100%; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--br); border-radius: 6px; padding: 9px 13px; color: var(--cr2); font-family: 'Cormorant Garamond', serif; font-size: 14px; outline: none; transition: border-color 0.3s; }
+.fi::placeholder { color: rgba(245, 230, 192, 0.24); }
+.fi:focus { border-color: var(--go); }
+textarea.fi { resize: vertical; min-height: 90px; }
+
+.fsel { width: 100%; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--br); border-radius: 6px; padding: 9px 13px; color: var(--cr2); font-family: 'Raleway', sans-serif; font-size: 11px; outline: none; cursor: pointer; }
+.fsel option { background: #2C1810; }
+
+.frow { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+
+.af { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--br2); border-radius: 9px; padding: 18px; margin-bottom: 18px; }
+.aft { font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--go); margin-bottom: 14px; }
+
+.vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 14px; }
+.vc { background: rgba(44, 24, 16, 0.5); border: 1px solid var(--br); border-radius: 9px; overflow: hidden; transition: transform 0.2s; }
+.vc:hover { transform: translateY(-2px); }
+.vth { width: 100%; aspect-ratio: 16 / 9; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; }
+.vpi { width: 44px; height: 44px; background: rgba(201, 153, 58, 0.8); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.vif { padding: 12px; }
+.vtitle { font-size: 14px; font-weight: 500; color: var(--pg); margin-bottom: 4px; }
+
+.evl { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 13px; }
+.evi { background: linear-gradient(180deg, rgba(44, 24, 16, 0.6), rgba(26, 10, 10, 0.8)); border: 1px solid var(--br); border-radius: 12px; overflow: hidden; transition: transform 0.2s; }
+.evi:hover { transform: translateY(-3px); }
+.edb { background: linear-gradient(135deg, var(--cr), var(--dcr)); padding: 18px 20px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid rgba(201, 153, 58, 0.2); }
+.edd { font-family: 'Cinzel Decorative', cursive; font-size: 42px; color: var(--bgo); line-height: 1; }
+.edm { font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(245, 230, 192, 0.7); margin-top: 4px; }
+.enm { font-size: 17px; font-weight: 500; color: var(--pg); margin-bottom: 6px; line-height: 1.3; }
+.edsc { font-size: 13px; color: rgba(245, 230, 192, 0.55); font-style: italic; line-height: 1.5; }
+.ebi { display: flex; flex-direction: column; }
+.ebc { padding: 16px 18px; flex: 1; }
+
+.crd { background: linear-gradient(135deg, rgba(44, 24, 16, 0.48), rgba(26, 10, 10, 0.68)); border: 1px solid var(--br); border-radius: 10px; padding: 18px; position: relative; overflow: hidden; margin-bottom: 13px; }
+.crd::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--go), transparent); }
+.ct { font-family: 'Cinzel Decorative', cursive; font-size: 14px; color: var(--bgo); margin-bottom: 3px; }
+.cs { font-style: italic; color: rgba(245, 230, 192, 0.44); font-size: 13px; margin-bottom: 12px; }
+
+.fqi { border: 1px solid var(--br2); border-radius: 8px; margin-bottom: 9px; overflow: hidden; }
+.fqq { padding: 13px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--pg); transition: background 0.2s; }
+.fqq:hover { background: rgba(201, 153, 58, 0.04); }
+.fqq .arr { color: var(--go); transition: transform 0.3s; font-size: 12px; }
+.fqa { padding: 0 16px; max-height: 0; overflow: hidden; transition: all 0.3s; font-size: 13px; color: rgba(245, 230, 192, 0.55); line-height: 1.7; }
+.fqi.open .fqa { padding: 13px 16px; max-height: 300px; }
+.fqi.open .arr { transform: rotate(180deg); }
+
+/* Parent Portal Styles */
+.plw { max-width: 400px; margin: 45px auto; text-align: center; padding: 0 16px; }
+.pll { font-family: 'Cinzel Decorative', cursive; font-size: clamp(15px, 3vw, 21px); color: var(--bgo); margin-bottom: 5px; text-shadow: 0 0 30px rgba(232, 184, 75, 0.3); }
+.plt { font-style: italic; color: rgba(245, 230, 192, 0.38); font-size: 12px; margin-bottom: 32px; letter-spacing: 2px; }
+.plc { background: linear-gradient(135deg, rgba(44, 24, 16, 0.58), rgba(26, 10, 10, 0.78)); border: 1px solid var(--br); border-radius: 11px; padding: 26px; position: relative; }
+.plc::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--go), transparent); border-radius: 11px 11px 0 0; }
+
+.ptgl { display: flex; background: rgba(0, 0, 0, 0.28); border: 1px solid var(--br); border-radius: 5px; margin-bottom: 18px; overflow: hidden; }
+.ptgl button { flex: 1; padding: 7px; font-family: 'Raleway', sans-serif; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; border: none; background: transparent; color: rgba(245, 230, 192, 0.38); cursor: pointer; transition: all 0.2s; }
+.ptgl button.active { background: rgba(201, 153, 58, 0.14); color: var(--bgo); }
+
+.pds { display: flex; gap: 9px; justify-content: center; margin: 12px 0; }
+.pd { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--br); background: transparent; transition: all 0.2s; }
+.pd.filled { background: var(--go); border-color: var(--go); }
+
+.pkp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 12px; }
+.pk { padding: 13px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--br); border-radius: 7px; font-family: 'Cinzel Decorative', cursive; font-size: 15px; color: var(--pg); cursor: pointer; transition: all 0.2s; text-align: center; }
+.pk:hover { background: rgba(201, 153, 58, 0.1); border-color: var(--go); }
+.pk:active { transform: scale(0.95); }
+
+.perr { color: var(--rd); font-size: 13px; font-style: italic; margin-top: 9px; min-height: 18px; }
+
+.pnav { display: flex; flex-wrap: wrap; background: rgba(0, 0, 0, 0.28); border-bottom: 1px solid var(--br2); padding: 0 8px; }
+.pnav button { flex: 1 1 auto; padding: 14px 16px; text-align: center; min-width: 0; font-family: 'Raleway', sans-serif; font-size: 13px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: rgba(245, 230, 192, 0.38); cursor: pointer; border: none; background: none; border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; }
+.pnav button:hover { color: var(--bgo); }
+.pnav button.active { color: var(--bgo); border-bottom-color: var(--go); }
+
+.psec { display: none; padding: 20px; max-width: 780px; margin: 0 auto; animation: fadeUp 0.4s ease; }
+.psec.active { display: block; }
+
+.sic { background: linear-gradient(135deg, rgba(92, 14, 14, 0.28), rgba(26, 10, 10, 0.58)); border: 1px solid rgba(201, 153, 58, 0.24); border-radius: 11px; padding: 20px; margin-bottom: 18px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+.sav { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--cr), var(--dcr)); display: flex; align-items: center; justify-content: center; font-family: 'Cinzel Decorative', cursive; font-size: 20px; color: var(--bgo); flex-shrink: 0; }
+.sin { font-family: 'Cinzel Decorative', cursive; font-size: 17px; color: var(--bgo); }
+.sid { font-size: 13px; color: rgba(245, 230, 192, 0.48); font-style: italic; margin-top: 2px; }
+
+.qcard { background: rgba(44, 24, 16, 0.45); border: 1px solid var(--br); border-radius: 9px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+.qcard:hover { background: rgba(44, 24, 16, 0.65); transform: translateY(-2px); }
+
+@media (max-width: 480px) {
+  .anav button, .pnav button { font-size: 9px; padding: 8px 6px; letter-spacing: 1px; }
+}
+
+@media (max-width: 680px) {
+  .htop { padding: 9px 13px; }
+  main, .psec { padding: 14px 13px; }
+  .th-row, .tr { grid-template-columns: 1.5fr 1fr 1fr; }
+  .th:nth-child(2), .th:nth-child(3), .tr > *:nth-child(2), .tr > *:nth-child(3) { display: none; }
+  .frow { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="htop">
+    <div class="horn">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="32" height="32" fill="none">
+        <path d="M24 44 C24 44 22 36 22 30" stroke="#c9993a" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M22 30 C18 28 12 30 10 26 C14 22 20 26 22 30Z" fill="#c9993a" opacity="0.55"/>
+        <path d="M22 30 C26 28 32 30 34 26 C30 22 24 26 22 30Z" fill="#c9993a" opacity="0.55"/>
+        <path d="M24 28 C18 24 14 16 18 10 C20 16 22 22 24 28Z" fill="#c9993a" opacity="0.7"/>
+        <path d="M24 28 C30 24 34 16 30 10 C28 16 26 22 24 28Z" fill="#c9993a" opacity="0.7"/>
+        <path d="M22 26 C14 22 8 14 12 8 C16 14 18 20 22 26Z" fill="#c9993a" opacity="0.5"/>
+        <path d="M26 26 C34 22 40 14 36 8 C32 14 30 20 26 26Z" fill="#c9993a" opacity="0.5"/>
+        <path d="M24 28 C22 20 22 12 24 6 C26 12 26 20 24 28Z" fill="#c9993a"/>
+        <ellipse cx="24" cy="28" rx="3" ry="4" fill="#c9993a"/>
+      </svg>
+    </div>
+    <div class="hctr">
+      <div class="sname">Bharathashetra School of Dance</div>
+      <div class="ssub" id="portalLbl">Admin & Parent Portal</div>
+    </div>
+    <div style="display:flex;gap:9px;align-items:center">
+      <div class="vsw" id="viewSwitch" style="display:none">
+        <button class="active" onclick="switchPortal('admin',event)">Admin</button>
+        <button onclick="switchPortal('parent',event)">Parent</button>
+      </div>
+      <button class="lout" id="loutBtn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+  <div class="hbdr"></div>
+</header>
+
+<!-- ADMIN PANEL -->
+<div id="adminP">
+<nav class="anav">
+  <button class="active" onclick="showSec('pay',this)">💰 Payments</button>
+  <button onclick="showSec('att',this)">✓ Attendance</button>
+  <button onclick="showSec('reg',this)">📝 Registrations</button>
+  <button onclick="showSec('vid',this)">▶ Videos</button>
+  <button onclick="showSec('forms',this)">📋 Forms</button>
+  <button onclick="showSec('settings',this)">⚙ Settings</button>
+</nav>
+
+<main>
+  <!-- PAYMENTS -->
+  <div class="sec active" id="sec-pay">
+    <div class="pgh"><div><div class="pgt">Payments</div><div class="pgs">Track and manage student payments</div></div></div>
+    <div class="srow">
+      <div class="sc"><span class="sn" id="stT">—</span><span class="sl">Total</span></div>
+      <div class="sc sp"><span class="sn" id="stP">—</span><span class="sl">Completed</span></div>
+      <div class="sc su"><span class="sn" id="stU">—</span><span class="sl">Pending</span></div>
+    </div>
+    <div class="ctrl">
+      <input class="sb" placeholder="Search student..." id="pSrch" oninput="renderPayments()">
+      <select class="fs" id="pSt" onchange="renderPayments()">
+        <option value="">All Statuses</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+        <option value="failed">Failed</option>
+      </select>
+    </div>
+    <div class="tw">
+      <div class="th-row"><div class="th">Student</div><div class="th">Amount</div><div class="th">Date</div><div class="th">Status</div><div class="th">Actions</div></div>
+      <div id="payBody"><div class="lds"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE -->
+  <div class="sec" id="sec-att">
+    <div class="pgh">
+      <div><div class="pgt">Attendance</div><div class="pgs">Mark and track student attendance</div></div>
+    </div>
+    <div class="srow">
+      <div class="sc"><span class="sn" id="atT">—</span><span class="sl">Total</span></div>
+      <div class="sc sp"><span class="sn" id="atP">—</span><span class="sl">Present</span></div>
+      <div class="sc su"><span class="sn" id="atA">—</span><span class="sl">Absent</span></div>
+    </div>
+    <div class="ctrl">
+      <select class="fs" id="attClass" onchange="loadAttendance()">
+        <option value="">Select Class</option>
+      </select>
+      <input type="date" class="fs" id="attDt" onchange="loadAttendance()">
+    </div>
+    <div class="tw">
+      <div class="th-row"><div class="th">Student</div><div class="th">Class</div><div class="th">Status</div><div class="th">Actions</div></div>
+      <div id="attBody"><div class="lds"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <!-- REGISTRATIONS -->
+  <div class="sec" id="sec-reg">
+    <div class="pgh"><div><div class="pgt">Registrations</div><div class="pgs">Manage student registrations</div></div></div>
+    <div class="af">
+      <div class="aft">+ Register New Student</div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Student Name</label><input class="fi" id="regName" placeholder="Full name"></div>
+        <div class="fg"><label class="fl">Email</label><input class="fi" id="regEmail" type="email" placeholder="email@example.com"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Phone</label><input class="fi" id="regPhone" placeholder="Phone number"></div>
+        <div class="fg"><label class="fl">Date of Birth</label><input class="fi" id="regDOB" type="date"></div>
+      </div>
+      <button class="bgld" onclick="registerStudent()">Register Student</button>
+    </div>
+    <div class="tw">
+      <div class="th-row"><div class="th">Student</div><div class="th">Email</div><div class="th">Phone</div><div class="th">Status</div><div class="th">Actions</div></div>
+      <div id="regBody"><div class="lds"><div class="spin"></div></div></div>
+    </div>
+  </div>
+
+  <!-- VIDEOS -->
+  <div class="sec" id="sec-vid">
+    <div class="pgh"><div><div class="pgt">Video Library</div><div class="pgs">Manage instructional videos</div></div></div>
+    <div class="af">
+      <div class="aft">+ Add Video</div>
+      <div class="fg"><label class="fl">Title</label><input class="fi" id="vTtl" placeholder="Video title"></div>
+      <div class="fg"><label class="fl">Video URL (YouTube or hosted link)</label><input class="fi" id="vUrl" placeholder="https://..."></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Instructor</label><input class="fi" id="vInst" placeholder="Instructor name"></div>
+        <div class="fg"><label class="fl">Duration (seconds)</label><input class="fi" id="vDur" type="number" placeholder="0"></div>
+      </div>
+      <button class="bgld" onclick="addVideo()">Add Video</button>
+    </div>
+    <div class="vgrid" id="vidGrid"><div class="emp"><div style="font-size:38px;opacity:.28;margin-bottom:10px">🎬</div><div style="font-style:italic">No videos yet</div></div></div>
+  </div>
+
+  <!-- FORMS -->
+  <div class="sec" id="sec-forms">
+    <div class="pgh"><div><div class="pgt">Forms</div><div class="pgs">Manage and collect form responses</div></div></div>
+    <div class="af">
+      <div class="aft">+ Create Form</div>
+      <div class="fg"><label class="fl">Form Title</label><input class="fi" id="formTitle" placeholder="e.g. Registration Form"></div>
+      <div class="fg"><label class="fl">Form Description</label><textarea class="fi" id="formDesc" rows="2"></textarea></div>
+      <button class="bgld" onclick="createForm()">Create Form</button>
+    </div>
+    <div id="formsList"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="sec" id="sec-settings">
+    <div class="pgh"><div><div class="pgt">Settings</div><div class="pgs">Customize your school portal</div></div></div>
+    <div class="crd">
+      <div class="ct">API Configuration</div>
+      <div class="cs">Configure backend API settings</div>
+      <div class="fg">
+        <label class="fl">API Base URL</label>
+        <input class="fi" id="apiUrl" placeholder="http://localhost:5000/api" value="http://localhost:5000/api">
+        <button class="bgld" onclick="saveSettings()" style="margin-top:10px">Save Settings</button>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- PARENT PORTAL -->
+<div id="parentP" style="display:none">
+  <div id="pLogin">
+    <div class="plw">
+      <div class="pll">Bharathashetra</div>
+      <div class="plt">Parent Portal</div>
+      <div class="plc">
+        <div class="ptgl">
+          <button class="active" id="lgTgl" onclick="setMode('login')">Sign In</button>
+          <button id="rgTgl" onclick="setMode('register')">Create Account</button>
+        </div>
+        <div class="fg"><label class="fl">Email</label><input class="fi" id="aEmail" type="email" placeholder="your@email.com"></div>
+        <div class="fg"><label class="fl" id="pinLbl">Password</label><input class="fi" id="aPassword" type="password" placeholder="••••••••"></div>
+        <button class="bpri" onclick="parentLogin()" style="width:100%;margin-top:15px">Sign In</button>
+        <div class="perr" id="pErr"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pHome" style="display:none">
+    <nav class="pnav">
+      <button class="active" onclick="showParentSec('dash',this)">Dashboard</button>
+      <button onclick="showParentSec('classes',this)">Classes</button>
+      <button onclick="showParentSec('att',this)">Attendance</button>
+      <button onclick="showParentSec('pay',this)">Payments</button>
+    </nav>
+
+    <main>
+      <!-- Dashboard -->
+      <div class="psec active" id="psec-dash">
+        <div class="sic">
+          <div class="sav">👨‍👩‍👧‍👦</div>
+          <div class="ebi">
+            <div class="sin">Welcome to Bharathashetra</div>
+            <div class="sid">View your student information and manage account</div>
+          </div>
+        </div>
+        <div class="srow" id="parentCards"></div>
+      </div>
+
+      <!-- Classes -->
+      <div class="psec" id="psec-classes">
+        <div class="pgh"><div class="pgt">Classes</div></div>
+        <div class="srow" id="parentClasses"></div>
+      </div>
+
+      <!-- Attendance -->
+      <div class="psec" id="psec-att">
+        <div class="pgh"><div class="pgt">Attendance</div></div>
+        <div class="tw">
+          <div class="th-row"><div class="th">Date</div><div class="th">Class</div><div class="th">Status</div></div>
+          <div id="parentAttBody"></div>
+        </div>
+      </div>
+
+      <!-- Payments -->
+      <div class="psec" id="psec-pay">
+        <div class="pgh"><div class="pgt">Payments</div></div>
+        <div class="tw">
+          <div class="th-row"><div class="th">Date</div><div class="th">Amount</div><div class="th">Status</div></div>
+          <div id="parentPayBody"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</div>
+
+<!-- Scripts -->
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+
+<script>
+// Check auth and initialize
+window.addEventListener('DOMContentLoaded', () => {
+  if (!Auth.isAuthenticated()) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  // Determine user role and show appropriate portal
+  const role = Auth.getUserRole();
+  if (role === 'admin') {
+    document.getElementById('adminP').style.display = 'block';
+    document.getElementById('parentP').style.display = 'none';
+    document.getElementById('viewSwitch').style.display = 'flex';
+    loadAdminData();
+  } else {
+    document.getElementById('adminP').style.display = 'none';
+    document.getElementById('parentP').style.display = 'block';
+    document.getElementById('viewSwitch').style.display = 'none';
+    loadParentData();
+  }
+});
+
+// Admin Functions
+function showSec(id, btn) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  document.querySelector(`#sec-${id}`).classList.add('active');
+  document.querySelectorAll('.anav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function switchPortal(portal, e) {
+  if (portal === 'admin') {
+    document.getElementById('adminP').style.display = 'block';
+    document.getElementById('parentP').style.display = 'none';
+    e.target.classList.add('active');
+    e.target.nextElementSibling?.classList.remove('active');
+  } else {
+    document.getElementById('adminP').style.display = 'none';
+    document.getElementById('parentP').style.display = 'block';
+    e.target.previousElementSibling?.classList.remove('active');
+    e.target.classList.add('active');
+  }
+}
+
+async function loadAdminData() {
+  try {
+    const payments = await API.getPayments(Auth.getUserId()).catch(() => ({ payments: [] }));
+    renderPayments(payments.payments || []);
+
+    const classes = await API.getClasses();
+    const classSelect = document.getElementById('attClass');
+    classSelect.innerHTML = '<option value="">Select Class</option>' +
+      classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  } catch (err) {
+    console.error('Error loading admin data:', err);
+  }
+}
+
+function renderPayments(payments = []) {
+  const search = document.getElementById('pSrch').value.toLowerCase();
+  const status = document.getElementById('pSt').value;
+
+  let filtered = payments.filter(p => {
+    const matchSearch = !search || p.student_name?.toLowerCase().includes(search);
+    const matchStatus = !status || p.status === status;
+    return matchSearch && matchStatus;
+  });
+
+  const body = document.getElementById('payBody');
+  body.innerHTML = filtered.map(p => `
+    <div class="tr">
+      <div class="snm">${p.student_name || 'Unknown'}</div>
+      <div class="ctm">$${p.amount}</div>
+      <div class="ctm">${new Date(p.payment_date).toLocaleDateString()}</div>
+      <div><span class="bdg ${getStatusClass(p.status)}">${p.status}</span></div>
+      <div><button class="btn brc" onclick="editPayment(${p.id})">Edit</button></div>
+    </div>
+  `).join('') || '<div class="tr"><div class="emp">No payments found</div></div>';
+}
+
+async function loadAttendance() {
+  const classId = document.getElementById('attClass').value;
+  if (!classId) return;
+
+  try {
+    const body = document.getElementById('attBody');
+    body.innerHTML = '<div class="lds"><div class="spin"></div></div>';
+    // Fetch from API
+    body.innerHTML = '<div class="emp">Attendance data will load here</div>';
+  } catch (err) {
+    console.error('Error loading attendance:', err);
+  }
+}
+
+function registerStudent() {
+  const name = document.getElementById('regName').value;
+  const email = document.getElementById('regEmail').value;
+  const phone = document.getElementById('regPhone').value;
+  const dob = document.getElementById('regDOB').value;
+
+  if (!name || !email) {
+    toast('Please fill in required fields', 'error');
+    return;
+  }
+
+  API.createStudent({ name, email, phone, date_of_birth: dob })
+    .then(() => {
+      toast('Student registered successfully', 'success');
+      document.getElementById('regName').value = '';
+      document.getElementById('regEmail').value = '';
+      document.getElementById('regPhone').value = '';
+      document.getElementById('regDOB').value = '';
+      loadStudents();
+    })
+    .catch(err => toast(err.message, 'error'));
+}
+
+function addVideo() {
+  const title = document.getElementById('vTtl').value;
+  const url = document.getElementById('vUrl').value;
+  const instructor = document.getElementById('vInst').value;
+  const duration = parseInt(document.getElementById('vDur').value) || 0;
+
+  if (!title || !url) {
+    toast('Please fill in required fields', 'error');
+    return;
+  }
+
+  API.uploadVideo({ title, video_url: url, instructor, duration, visibility: 'public' })
+    .then(() => {
+      toast('Video added successfully', 'success');
+      document.getElementById('vTtl').value = '';
+      document.getElementById('vUrl').value = '';
+      document.getElementById('vInst').value = '';
+      document.getElementById('vDur').value = '';
+      loadVideos();
+    })
+    .catch(err => toast(err.message, 'error'));
+}
+
+function saveSettings() {
+  const apiUrl = document.getElementById('apiUrl').value;
+  localStorage.setItem('apiUrl', apiUrl);
+  toast('Settings saved', 'success');
+}
+
+// Parent Portal Functions
+function setMode(mode) {
+  const isLogin = mode === 'login';
+  document.getElementById('lgTgl').classList.toggle('active', isLogin);
+  document.getElementById('rgTgl').classList.toggle('active', !isLogin);
+  document.getElementById('pinLbl').textContent = isLogin ? 'Password' : 'Create Password';
+  document.getElementById('aPassword').type = 'password';
+}
+
+function parentLogin() {
+  const email = document.getElementById('aEmail').value;
+  const password = document.getElementById('aPassword').value;
+
+  if (!email || !password) {
+    document.getElementById('pErr').textContent = 'Please enter email and password';
+    return;
+  }
+
+  Auth.login(email, password)
+    .then(() => {
+      document.getElementById('pLogin').style.display = 'none';
+      document.getElementById('pHome').style.display = 'block';
+      loadParentData();
+    })
+    .catch(err => {
+      document.getElementById('pErr').textContent = err.message;
+    });
+}
+
+async function loadParentData() {
+  try {
+    const students = await API.getStudents();
+    const cards = document.getElementById('parentCards');
+    cards.innerHTML = students.map(s => `
+      <div class="sc">
+        <span class="sn">${s.name}</span>
+        <span class="sl">${s.status}</span>
+      </div>
+    `).join('');
+
+    const classes = await API.getClasses();
+    const classesDiv = document.getElementById('parentClasses');
+    classesDiv.innerHTML = classes.map(c => `
+      <div class="sc">
+        <span class="sn">${c.name}</span>
+        <span class="sl">${c.level}</span>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Error loading parent data:', err);
+  }
+}
+
+function showParentSec(id, btn) {
+  document.querySelectorAll('.psec').forEach(s => s.classList.remove('active'));
+  document.querySelector(`#psec-${id}`).classList.add('active');
+  document.querySelectorAll('.pnav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Utility Functions
+function getStatusClass(status) {
+  const classes = {
+    'completed': 'bp',
+    'pending': 'bpnd',
+    'failed': 'bu',
+    'present': 'bp',
+    'absent': 'bu',
+    'late': 'bl'
+  };
+  return classes[status] || 'bp';
+}
+
+function toast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast show`;
+  t.textContent = msg;
+  t.style.backgroundColor = type === 'error' ? '#D46060' : type === 'success' ? '#4CAF8A' : '#C9993A';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function doLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    Auth.logout();
+  }
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  const apiUrl = localStorage.getItem('apiUrl');
+  if (apiUrl) {
+    document.getElementById('apiUrl').value = apiUrl;
+  }
+});
+</script>
+</body>
+</html>
