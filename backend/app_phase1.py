@@ -110,6 +110,9 @@ def create_app():
 
     return app
 
+# Create app at module level for gunicorn
+app = create_app()
+
 if __name__ == '__main__':
     print("=" * 60)
     print("BHARATHASHETRA BACKEND - PHASE 1")
@@ -120,5 +123,4 @@ if __name__ == '__main__':
     print(f"Port: 8000")
     print("=" * 60)
 
-    app = create_app()
     app.run(debug=True, port=8000, host='0.0.0.0')
