@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#1A0A0A">
 <meta name="background-color" content="#1A0A0A">
 <title>Bharathashetra School of Dance</title>
+<link rel="manifest" href="/manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Raleway:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -3301,6 +3302,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }, 500);
 });
+</script>
+<script>
+// Register Service Worker for PWA support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('Service Worker registered', reg))
+      .catch(err => console.log('Service Worker registration failed:', err));
+  });
+}
 </script>
 </body>
 </html>
