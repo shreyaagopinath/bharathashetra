@@ -194,6 +194,10 @@ def update_student(student_id):
             student.phone = data['phone']
         if 'date_of_birth' in data:
             student.date_of_birth = data['date_of_birth']
+        if 'class_day' in data:
+            student.class_day = data['class_day']
+        if 'class_time' in data:
+            student.class_time = data['class_time']
         if 'status' in data and user.role == 'admin':
             student.status = data['status']
 

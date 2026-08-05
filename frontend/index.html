@@ -763,6 +763,21 @@ button[style*="background:var(--am)"] {
         <div class="fg"><label class="fl">Phone</label><input class="fi" id="regPhone"></div>
         <div class="fg"><label class="fl">DOB</label><input class="fi" id="regDOB" type="date"></div>
       </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Class Day</label>
+          <select class="fs" id="regClassDay">
+            <option value="">Select Day</option>
+            <option>Monday</option>
+            <option>Tuesday</option>
+            <option>Wednesday</option>
+            <option>Thursday</option>
+            <option>Friday</option>
+            <option>Saturday</option>
+            <option>Sunday</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Class Time</label><input class="fi" id="regClassTime" placeholder="e.g. 3:00 PM"></div>
+      </div>
       <button class="bgld" onclick="registerStudent()">Register</button>
     </div>
     <div class="tw">
@@ -1133,6 +1148,7 @@ function showSec(id, btn) {
   if (id === 'dashboard') loadAdminDashboard();
   if (id === 'ann') loadAnnouncements();
   if (id === 'pay') loadPaymentsWithStudentData();
+  if (id === 'reg') loadStudents();
 }
 
 function switchView(view) {
@@ -1203,24 +1219,120 @@ function recordPayment() {
   .catch(err => toast(err.message, 'error'));
 }
 
-function registerStudent() {
-  const name = document.getElementById('regName').value;
-  const email = document.getElementById('regEmail').value;
-  const phone = document.getElementById('regPhone').value;
-  const dob = document.getElementById('regDOB').value;
+async function loadStudents() {
+  try {
+    showLoading();
+    const resp = await fetch('https://bharathashetra.onrender.com/api/students', {
+      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+    });
+    if (!resp.ok) throw new Error('Failed to load students');
 
-  if (!name || !email) {
-    toast('Name and email required', 'error');
+    const students = await resp.json();
+    const body = document.getElementById('regBody');
+
+    if (!Array.isArray(students) || students.length === 0) {
+      body.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(245,230,192,.4)">No students registered</div>';
+      showLoading(false);
+      return;
+    }
+
+    body.innerHTML = students.map(s => `
+      <div class="tr">
+        <div class="td">${s.name}</div>
+        <div class="td">${s.email || '-'}</div>
+        <div class="td">${s.phone || '-'}</div>
+        <div class="td">${s.status || 'active'}</div>
+        <div class="td">
+          <button onclick="editStudent(${s.id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:5px 10px;cursor:pointer;font-size:12px;margin-right:5px;">Edit</button>
+          <button onclick="deleteStudent(${s.id})" style="background:transparent;border:1px solid var(--rd);color:var(--rd);padding:5px 10px;cursor:pointer;font-size:12px;">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+    toast('Failed to load students', 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+function editStudent(studentId) {
+  const classDay = prompt('Class Day (Monday/Tuesday/etc):');
+  if (!classDay) return;
+
+  const classTime = prompt('Class Time (e.g. 3:00 PM):');
+  if (!classTime) return;
+
+  showLoading();
+  fetch(`https://bharathashetra.onrender.com/api/students/${studentId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+    },
+    body: JSON.stringify({class_day: classDay, class_time: classTime})
+  })
+  .then(resp => {
+    if (!resp.ok) throw new Error('Failed to update');
+    return resp.json();
+  })
+  .then(() => {
+    toast('Class times updated!', 'success');
+    loadStudents();
+  })
+  .catch(err => toast('Update failed: ' + err.message, 'error'))
+  .finally(() => showLoading(false));
+}
+
+function registerStudent() {
+  showLoading();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const dob = document.getElementById('regDOB').value;
+  const classDay = document.getElementById('regClassDay').value;
+  const classTime = document.getElementById('regClassTime').value.trim();
+
+  if (!name) {
+    showLoading(false);
+    toast('Name is required', 'error');
     return;
   }
 
-  API.createStudent({name, email, phone, date_of_birth: dob})
-  .then(() => {
+  fetch('https://bharathashetra.onrender.com/api/students', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+    },
+    body: JSON.stringify({
+      name,
+      email: email || null,
+      phone: phone || null,
+      date_of_birth: dob || null,
+      class_day: classDay || null,
+      class_time: classTime || null
+    })
+  })
+  .then(resp => {
+    if (!resp.ok) throw new Error('Registration failed');
+    return resp.json();
+  })
+  .then(data => {
     toast('Student registered!', 'success');
     document.getElementById('regName').value = '';
     document.getElementById('regEmail').value = '';
+    document.getElementById('regPhone').value = '';
+    document.getElementById('regDOB').value = '';
+    document.getElementById('regClassDay').value = '';
+    document.getElementById('regClassTime').value = '';
+    loadStudents(); // Refresh the list
   })
-  .catch(err => toast(err.message, 'error'));
+  .catch(err => {
+    console.error('Registration error:', err);
+    toast('Registration failed: ' + err.message, 'error');
+  })
+  .finally(() => showLoading(false));
 }
 
 function addVideo() {
@@ -1686,10 +1798,14 @@ async function deleteStudent(studentId) {
 
 function doLogout() {
   if (confirm('Logout?')) {
+    showLoading();
+    // Logout immediately - don't wait for API
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
-    window.location.href = '/login.html';
+    setTimeout(() => {
+      window.location.href = '/login.html';
+    }, 500);
   }
 }
 
@@ -2434,15 +2550,23 @@ async function markAttendance(studentId, status, day, time) {
 
 async function loadStudentsForPayment() {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const response = await fetch('https://bharathashetra.onrender.com/api/students', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')},
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     allStudentsForPayment = Array.isArray(data) ? data : [];
-    console.log('Loaded students for payment:', allStudentsForPayment.length);
+    console.log('✓ Loaded students for payment:', allStudentsForPayment.length);
   } catch (e) {
-    console.error('Error loading students:', e);
+    console.error('✗ Error loading students:', e);
     allStudentsForPayment = [];
+    toast('Failed to load students', 'error');
   }
 }
 
@@ -2589,21 +2713,29 @@ let allPayments = [];
 async function loadPaymentsWithStudentData() {
   showLoading();
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
     // Get all payments
     const payResp = await fetch('https://bharathashetra.onrender.com/api/payments', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')},
+      signal: controller.signal
     });
-    if (!payResp.ok) throw new Error('Failed to load payments');
+    if (!payResp.ok) throw new Error(`Payments: HTTP ${payResp.status}`);
     let payments = await payResp.json();
     if (!Array.isArray(payments)) payments = [];
+    console.log('✓ Loaded payments:', payments.length);
 
     // Get all students with class info
     const studResp = await fetch('https://bharathashetra.onrender.com/api/students', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')},
+      signal: controller.signal
     });
-    if (!studResp.ok) throw new Error('Failed to load students');
+    if (!studResp.ok) throw new Error(`Students: HTTP ${studResp.status}`);
     let students = await studResp.json();
     if (!Array.isArray(students)) students = [];
+    console.log('✓ Loaded students:', students.length);
+    clearTimeout(timeoutId);
 
     // Merge payment data with student class info
     allPayments = payments.map(p => {
