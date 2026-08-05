@@ -15,6 +15,9 @@ FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), 'frontend')
 DB_FILE = os.getenv('DATABASE_PATH', 'bharathashetra.db')
 DATABASE_PATH = DB_FILE if DB_FILE.startswith('/') or DB_FILE.startswith('sqlite:') else os.path.join(BACKEND_DIR, DB_FILE)
 
+# Ensure database directory exists
+os.makedirs(os.path.dirname(DATABASE_PATH) or '.', exist_ok=True)
+
 def create_app():
     """Application factory"""
     app = Flask(__name__)

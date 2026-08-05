@@ -5,7 +5,6 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
 from extensions import db
 from models import User, Student, Parent
-from sqlalchemy import select
 from datetime import timedelta
 
 auth_bp = Blueprint('auth', __name__)
@@ -25,17 +24,13 @@ def parent_login():
         return {'error': 'PIN must be 4 digits'}, 400
 
     # Find student by parent email and PIN
-    student = db.session.execute(
-        select(Student).filter_by(parent_email=email, parent_pin=pin)
-    ).scalar()
+    student = Student.query.filter_by(parent_email=email, parent_pin=pin).first()
 
     if not student:
         return {'error': 'Invalid email or PIN'}, 401
 
     # Get or create parent user
-    user = db.session.execute(
-        select(User).filter_by(email=email, role='parent')
-    ).scalar()
+    user = User.query.filter_by(email=email, role='parent').first()
 
     if not user:
         # Create parent user if doesn't exist
@@ -70,9 +65,7 @@ def admin_login():
     if not email or not password:
         return {'error': 'Email and password required'}, 400
 
-    user = db.session.execute(
-        select(User).filter_by(email=email, role='admin')
-    ).scalar()
+    user = User.query.filter_by(email=email, role='admin').first()
 
     if not user or not user.check_password(password):
         return {'error': 'Invalid email or password'}, 401
