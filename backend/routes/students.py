@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models import Student, User, Parent
+from datetime import datetime
 
 students_bp = Blueprint('students', __name__)
 
@@ -100,11 +101,16 @@ def create_student():
             parent = Parent.query.filter_by(user_id=user_id).first()
             parent_id = parent.id if parent else None
 
+        # Convert date string to Python date object
+        dob = data.get('date_of_birth')
+        if dob and isinstance(dob, str):
+            dob = datetime.strptime(dob, '%Y-%m-%d').date()
+
         student = Student(
             name=data.get('name'),
             email=data.get('email'),
             phone=data.get('phone'),
-            date_of_birth=data.get('date_of_birth'),
+            date_of_birth=dob,
             parent_id=parent_id,
             status='active'
         )

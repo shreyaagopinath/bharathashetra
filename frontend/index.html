@@ -2536,13 +2536,15 @@ async function loadPaymentsWithStudentData() {
     const payResp = await fetch('https://bharathashetra.onrender.com/api/payments', {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
-    const payments = await payResp.json();
+    let payments = await payResp.json();
+    if (!Array.isArray(payments)) payments = [];
 
     // Get all students with class info
     const studResp = await fetch('https://bharathashetra.onrender.com/api/students', {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
-    const students = await studResp.json();
+    let students = await studResp.json();
+    if (!Array.isArray(students)) students = [];
 
     // Merge payment data with student class info
     allPayments = payments.map(p => {
