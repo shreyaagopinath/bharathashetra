@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-  baseURL: localStorage.getItem('apiUrl') || 'http://localhost:8000/api',
+  baseURL: localStorage.getItem('apiUrl') || 'https://bharathashetra.onrender.com/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
