@@ -49,8 +49,8 @@ self.addEventListener('fetch', event => {
       fetch(request)
         .then(response => {
           if (response.ok) {
-            const cache = caches.open(CACHE_NAME);
-            cache.then(c => c.put(request, response.clone()));
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then(c => c.put(request, responseClone));
           }
           return response;
         })
@@ -72,8 +72,9 @@ self.addEventListener('fetch', event => {
           if (!response || response.status !== 200 || response.type === 'error') {
             return response;
           }
-          const cache = caches.open(CACHE_NAME);
-          cache.then(c => c.put(request, response.clone()));
+          // Clone before caching to avoid "body already used" error
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(request, responseClone));
           return response;
         })
         .catch(() => {
