@@ -19,31 +19,39 @@ from datetime import timedelta
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), 'frontend')
 
-# Use PostgreSQL on Render, SQLite locally
+# Resolve the database URI once, correctly, for both Postgres and SQLite.
+#
+# NOTE: this block previously wrapped EVERY value in `sqlite:///`, so a valid
+# DATABASE_URL like `postgresql://user@host/db` became
+# `sqlite:///postgresql://user@host/db` - i.e. a throwaway SQLite file with a
+# very strange name. The app appeared to boot fine but every record was wiped
+# on each restart/redeploy. Do not reintroduce that fallback.
 DATABASE_URL = os.getenv('DATABASE_URL')
-if DATABASE_URL:
-    # Render PostgreSQL - replace postgres:// with postgresql://
-    DATABASE_PATH = DATABASE_URL.replace('postgres://', 'postgresql://')
-else:
-    # Local SQLite development
-    DB_FILE = os.getenv('DATABASE_PATH', 'bharathashetra.db')
-    DATABASE_PATH = DB_FILE if DB_FILE.startswith('/') or DB_FILE.startswith('sqlite:') else os.path.join(BACKEND_DIR, DB_FILE)
 
-# Ensure database directory exists
-os.makedirs(os.path.dirname(DATABASE_PATH) or '.', exist_ok=True)
+if DATABASE_URL:
+    # Heroku/Render-style URLs use the legacy postgres:// scheme
+    DATABASE_URI = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+else:
+    DB_FILE = os.getenv('DATABASE_PATH', 'bharathashetra.db')
+    if DB_FILE.startswith('sqlite:'):
+        DATABASE_URI = DB_FILE
+    else:
+        abs_path = DB_FILE if os.path.isabs(DB_FILE) else os.path.join(BACKEND_DIR, DB_FILE)
+        os.makedirs(os.path.dirname(abs_path) or '.', exist_ok=True)
+        DATABASE_URI = f'sqlite:///{abs_path}'
+
+DATABASE_PATH = DATABASE_URI  # kept for the startup banner below
 
 def create_app():
     """Application factory"""
     app = Flask(__name__)
 
     # Configuration
-    # Ensure proper SQLite URI format
-    if DATABASE_PATH.startswith('sqlite:'):
-        db_uri = DATABASE_PATH
-    else:
-        db_uri = f'sqlite:///{DATABASE_PATH}'
+    db_uri = DATABASE_URI
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    print(f"→ Database engine: {'PostgreSQL (persistent)' if db_uri.startswith('postgres') else 'SQLite (EPHEMERAL on Render)'}")
 
     # Connection pooling only for PostgreSQL, not SQLite
     if db_uri.startswith('postgresql://') or db_uri.startswith('postgresql+psycopg2://'):
@@ -118,10 +126,29 @@ def create_app():
         except Exception as e:
             print(f"Note: Could not create default admin: {e}")
 
-    # API Health check
+    # API Health check + storage diagnostics (no credentials exposed)
     @app.route('/api/health', methods=['GET'])
     def health():
-        return {'status': 'ok', 'phase': 'phase-1'}, 200
+        uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        engine = 'postgresql' if uri.startswith('postgres') else 'sqlite'
+        info = {
+            'status': 'ok',
+            'phase': 'phase-1',
+            'db_engine': engine,
+            'persistent': engine == 'postgresql',
+            'database_url_env_set': bool(os.getenv('DATABASE_URL')),
+        }
+        try:
+            from models import Student
+            info['student_count'] = db.session.query(Student).count()
+        except Exception as e:
+            info['student_count'] = None
+            info['db_error'] = str(e)[:200]
+        if engine == 'sqlite':
+            info['warning'] = ('Using SQLite on an ephemeral disk - all data is erased whenever '
+                               'the server restarts or redeploys. Set DATABASE_URL to a PostgreSQL '
+                               'connection string to make data persist.')
+        return info, 200
 
     # Serve frontend files
     @app.route('/')
@@ -152,8 +179,9 @@ if __name__ == '__main__':
     print("=" * 60)
     print("BHARATHASHETRA BACKEND - PHASE 1")
     print("=" * 60)
-    db_display = DATABASE_PATH if DATABASE_PATH.startswith('sqlite:') else f'sqlite:///{DATABASE_PATH}'
-    print(f"Database: {db_display}")
+    # Mask credentials if this is a Postgres URL
+    import re as _re
+    print(f"Database: {_re.sub(r'//[^@]+@', '//***:***@', DATABASE_URI)}")
     print(f"Frontend: {FRONTEND_DIR}")
     print(f"Port: 8000")
     print("=" * 60)
