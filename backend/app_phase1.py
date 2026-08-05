@@ -44,6 +44,12 @@ def create_app():
         db_uri = f'sqlite:///{DATABASE_PATH}'
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 5,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+        'connect_args': {'connect_timeout': 10}
+    }
     # Set secrets FIRST before JWT init
     secret_key = 'bharathashetra-secret-key-production-2024'
     jwt_secret = 'bharathashetra-jwt-secret-production-2024'
