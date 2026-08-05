@@ -19,9 +19,15 @@ from datetime import timedelta
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 FRONTEND_DIR = os.path.join(os.path.dirname(BACKEND_DIR), 'frontend')
 
-# Use local backend directory for persistent storage
-DB_FILE = os.getenv('DATABASE_PATH', 'bharathashetra.db')
-DATABASE_PATH = DB_FILE if DB_FILE.startswith('/') or DB_FILE.startswith('sqlite:') else os.path.join(BACKEND_DIR, DB_FILE)
+# Use PostgreSQL on Render, SQLite locally
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    # Render PostgreSQL - replace postgres:// with postgresql://
+    DATABASE_PATH = DATABASE_URL.replace('postgres://', 'postgresql://')
+else:
+    # Local SQLite development
+    DB_FILE = os.getenv('DATABASE_PATH', 'bharathashetra.db')
+    DATABASE_PATH = DB_FILE if DB_FILE.startswith('/') or DB_FILE.startswith('sqlite:') else os.path.join(BACKEND_DIR, DB_FILE)
 
 # Ensure database directory exists
 os.makedirs(os.path.dirname(DATABASE_PATH) or '.', exist_ok=True)
