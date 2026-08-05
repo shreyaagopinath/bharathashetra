@@ -2,9 +2,16 @@
 Bharathashetra Backend - Phase 1
 Database + CSV Import + Parent PIN Login + Admin Password Login
 """
+import os
+
+# SET SECRETS BEFORE ANY IMPORTS OF JWT
+if 'SECRET_KEY' not in os.environ:
+    os.environ['SECRET_KEY'] = 'bharathashetra-secret-key-2024'
+if 'JWT_SECRET_KEY' not in os.environ:
+    os.environ['JWT_SECRET_KEY'] = 'bharathashetra-jwt-secret-2024'
+
 from flask import Flask, send_file, request, jsonify
 from flask_cors import CORS
-import os
 from extensions import db, jwt
 from datetime import timedelta
 
@@ -34,12 +41,19 @@ def create_app():
         db_uri = f'sqlite:///{DATABASE_PATH}'
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'bharathashetra-secret-key-dev-2024')
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'bharathashetra-jwt-secret-key-dev-2024')
-    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)  # 30 days for persistent login
+    # Set secrets FIRST before JWT init
+    secret_key = 'bharathashetra-secret-key-production-2024'
+    jwt_secret = 'bharathashetra-jwt-secret-production-2024'
 
-    # Initialize extensions
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', secret_key)
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', jwt_secret)
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=30)
+
+    # Initialize extensions WITH app context
     db.init_app(app)
+
+    # Explicitly set JWT config before init
+    app.config.update(JWT_SECRET_KEY=app.config['JWT_SECRET_KEY'])
     jwt.init_app(app)
 
     # Import models BEFORE creating tables
