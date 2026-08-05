@@ -27,6 +27,27 @@ def calculate_late_fee(payment_date, month_paid_for):
         return late_fee
     return 0.0
 
+@payments_bp.route('', methods=['GET'])
+@jwt_required()
+def get_all_payments():
+    """Get all payments (admin only)"""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    payments = Payment.query.order_by(Payment.payment_date.desc()).all()
+    return jsonify([{
+        'id': p.id,
+        'student_id': p.student_id,
+        'amount': p.amount,
+        'late_fee_applied': p.late_fee_applied,
+        'payment_date': p.payment_date.isoformat() if p.payment_date else None,
+        'month_paid_for': p.month_paid_for,
+        'status': p.status
+    } for p in payments]), 200
+
 @payments_bp.route('/student/<int:student_id>', methods=['GET'])
 @jwt_required()
 def get_student_payments(student_id):

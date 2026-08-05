@@ -43,7 +43,7 @@ body {
   background: var(--dk);
   color: var(--cr2);
   font-family: 'Cormorant Garamond', serif;
-  font-size: 16px;
+  font-size: 18px;
   min-height: 100vh;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
@@ -433,8 +433,8 @@ button[style*="background:var(--am)"] {
 .toast.show { transform: translateY(0); opacity: 1; }
 
 .fg { margin-bottom: 14px; }
-.fl { display: block; font-family: 'Raleway', sans-serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: rgba(245, 230, 192, 0.48); margin-bottom: 6px; }
-.fi { width: 100%; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--br); border-radius: 6px; padding: 9px 13px; color: var(--cr2); font-family: 'Cormorant Garamond', serif; font-size: 16px; outline: none; transition: border-color 0.3s; }
+.fl { display: block; font-family: 'Raleway', sans-serif; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: rgba(245, 230, 192, 0.48); margin-bottom: 6px; }
+.fi { width: 100%; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--br); border-radius: 6px; padding: 9px 13px; color: var(--cr2); font-family: 'Cormorant Garamond', serif; font-size: 18px; outline: none; transition: border-color 0.3s; }
 .fi::placeholder { color: rgba(245, 230, 192, 0.24); }
 .fi:focus { border-color: var(--go); }
 
@@ -1636,7 +1636,10 @@ function toast(msg, type = 'info') {
 
 function doLogout() {
   if (confirm('Logout?')) {
-    Auth.logout();
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+    window.location.href = '/login.html';
   }
 }
 
