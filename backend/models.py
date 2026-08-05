@@ -174,7 +174,7 @@ class Video(db.Model):
     description = db.Column(db.Text)
     category = db.Column(db.String(100))  # e.g., "Stage Ready", "Theermanam", etc.
     class_id = db.Column(db.Integer, db.ForeignKey('dance_classes.id'))
-    video_url = db.Column(db.String(500))  # YouTube URL or hosted video
+    video_url = db.Column(db.Text)  # YouTube URL or hosted/base64 video
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     instructor = db.Column(db.String(120))
     duration = db.Column(db.Integer)  # in seconds
@@ -221,7 +221,10 @@ class PhotoAlbum(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
-    cover_photo_url = db.Column(db.String(500))
+    # Text, not String(500): these hold base64 data URLs (~300KB). Postgres
+    # enforces VARCHAR limits (SQLite does not), so a length cap here rejects
+    # every upload with "value too long for type character varying".
+    cover_photo_url = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_public = db.Column(db.Boolean, default=True)
@@ -235,7 +238,7 @@ class Photo(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     album_id = db.Column(db.Integer, db.ForeignKey('photo_albums.id'), nullable=False)
-    photo_url = db.Column(db.String(500), nullable=False)
+    photo_url = db.Column(db.Text, nullable=False)  # base64 data URL - must be unbounded
     caption = db.Column(db.Text)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     order = db.Column(db.Integer, default=0)

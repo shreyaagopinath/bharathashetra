@@ -120,6 +120,27 @@ def create_app():
     with app.app_context():
         try:
             db.create_all()
+
+            # create_all() never ALTERs an existing table. These columns were
+            # originally VARCHAR(500) but must hold base64 data URLs (~300KB).
+            # SQLite ignores length limits so this only ever broke on Postgres.
+            if db.engine.url.get_backend_name() == 'postgresql':
+                widen = [
+                    ('photos', 'photo_url'),
+                    ('photo_albums', 'cover_photo_url'),
+                    ('videos', 'video_url'),
+                ]
+                for table, column in widen:
+                    try:
+                        db.session.execute(
+                            f'ALTER TABLE {table} ALTER COLUMN {column} TYPE TEXT'
+                        )
+                        db.session.commit()
+                    except Exception as mig_err:
+                        db.session.rollback()
+                        # Table may not exist yet, or already be TEXT - both fine
+                        print(f"  (schema check {table}.{column}: {str(mig_err)[:90]})")
+                print("✓ Schema check complete (text columns widened)")
             admin_exists = db.session.query(User).filter_by(role='admin').first()
             if not admin_exists:
                 admin = User(email='admin@dance.local', role='admin')

@@ -162,13 +162,13 @@ header {
 
 .anav button {
   flex: 1 1 auto;
-  padding: 9px 10px;
+  padding: 12px 14px;
   font-family: 'Raleway', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 1.5px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: rgba(245, 230, 192, 0.45);
+  color: rgba(245, 230, 192, 0.62);
   cursor: pointer;
   border: none;
   background: none;
@@ -2183,7 +2183,7 @@ async function uploadPhoto() {
   const caption = document.getElementById('photoCaption').value;
   const statusEl = document.getElementById('uploadStatus');
   const total = files.length;
-  let uploaded = 0, failed = 0;
+  let uploaded = 0, failed = 0, firstError = null;
 
   const btn = document.querySelector('button[onclick="uploadPhoto()"]');
   if (btn) { btn.disabled = true; btn.style.opacity = '.5'; }
@@ -2220,18 +2220,31 @@ async function uploadPhoto() {
           caption: caption || file.name.replace(/\.[^.]+$/, '')
         })
       });
-      if (resp.ok) uploaded++; else { failed++; console.error(`Photo ${i + 1} failed: HTTP ${resp.status}`); }
+      if (resp.ok) {
+        uploaded++;
+      } else {
+        failed++;
+        const body = await resp.json().catch(() => ({}));
+        if (!firstError) firstError = body.error || `HTTP ${resp.status}`;
+        console.error(`Photo ${i + 1} failed:`, firstError);
+      }
     } catch (e) {
       failed++;
+      if (!firstError) firstError = e.message;
       console.error('Upload error:', e);
     }
   }
 
   if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
 
-  statusEl.innerHTML = failed
-    ? `<div style="color:#d9534f">✓ ${uploaded} added, ${failed} failed</div>`
-    : `<div style="color:var(--gn)">✓ ${uploaded} photo${uploaded === 1 ? '' : 's'} added!</div>`;
+  if (failed) {
+    statusEl.innerHTML =
+      `<div style="color:#d9534f">${uploaded} added, ${failed} failed</div>` +
+      `<div style="color:rgba(245,230,192,.65);font-size:13px;margin-top:6px;word-break:break-word">${firstError || 'Unknown error'}</div>`;
+    if (!uploaded) return;   // keep the dialog open so the error stays readable
+  } else {
+    statusEl.innerHTML = `<div style="color:var(--gn)">✓ ${uploaded} photo${uploaded === 1 ? '' : 's'} added!</div>`;
+  }
 
   setTimeout(() => { closePhotoUpload(); loadAlbums(); }, 1500);
 }
