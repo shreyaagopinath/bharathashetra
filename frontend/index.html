@@ -781,10 +781,15 @@ button[style*="background:var(--am)"] {
         </div>
         <div class="fg"><label class="fl">Class Time</label><input class="fi" id="regClassTime" placeholder="e.g. 3:00 PM"></div>
       </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Parent Login PIN</label><input class="fi" id="regPin" maxlength="4" inputmode="numeric" placeholder="Defaults to last 4 digits of phone"></div>
+        <div></div>
+      </div>
+      <div style="font-size:13px;color:rgba(245,230,192,.5);margin:-4px 0 12px">Parents sign in with their email + this 4-digit PIN.</div>
       <button class="bgld" onclick="registerStudent()">Register</button>
     </div>
     <div class="tw">
-      <div class="th-row" style="grid-template-columns:1.4fr 1.6fr 1fr 1fr 1fr .8fr 1.2fr"><div class="th">Student</div><div class="th">Email</div><div class="th">Phone</div><div class="th">Class Day</div><div class="th">Class Time</div><div class="th">Status</div><div class="th">Actions</div></div>
+      <div class="th-row" style="grid-template-columns:1.4fr 1.6fr 1fr 1fr 1fr .7fr .8fr 1.2fr"><div class="th">Student</div><div class="th">Email</div><div class="th">Phone</div><div class="th">Class Day</div><div class="th">Class Time</div><div class="th">PIN</div><div class="th">Status</div><div class="th">Actions</div></div>
       <div id="regBody"></div>
     </div>
   </div>
@@ -1309,13 +1314,21 @@ async function loadStudents() {
     }
 
     allStudentsCache = students;
-    body.innerHTML = students.map(s => `
-      <div class="tr" style="grid-template-columns:1.4fr 1.6fr 1fr 1fr 1fr .8fr 1.2fr">
+    const noPin = students.filter(s => !s.parent_pin).length;
+    const banner = noPin
+      ? `<div style="padding:10px 12px;margin-bottom:10px;background:rgba(217,83,79,.12);border:1px solid rgba(217,83,79,.4);border-radius:6px;font-size:14px;color:#e8a09e">
+           ${noPin} student${noPin === 1 ? '' : 's'} ha${noPin === 1 ? 's' : 've'} no login PIN — those parents cannot sign in. Click Edit to set one.
+         </div>`
+      : '';
+
+    body.innerHTML = banner + students.map(s => `
+      <div class="tr" style="grid-template-columns:1.4fr 1.6fr 1fr 1fr 1fr .7fr .8fr 1.2fr">
         <div class="td">${s.name || '-'}</div>
         <div class="td">${s.email || s.parent_email || '-'}</div>
         <div class="td">${s.phone || '-'}</div>
         <div class="td">${s.class_day || '-'}</div>
         <div class="td">${s.class_time || '-'}</div>
+        <div class="td">${s.parent_pin ? `<code style="color:var(--bgo)">${s.parent_pin}</code>` : '<span style="color:#d9534f">none</span>'}</div>
         <div class="td">${s.status || 'active'}</div>
         <div class="td">
           <button onclick="editStudent(${s.id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:4px 8px;cursor:pointer;font-size:12px;margin-right:4px;border-radius:4px;">Edit</button>
@@ -1352,6 +1365,9 @@ function editStudent(studentId) {
       <label class="fl" style="margin-top:10px;display:block">Class Day</label>
       <select class="fs" id="edDay"><option value="">-- none --</option>${days.map(d=>`<option ${s.class_day===d?'selected':''}>${d}</option>`).join('')}</select>
       <label class="fl" style="margin-top:10px;display:block">Class Time</label><input class="fi" id="edTime" placeholder="e.g. 3:00 PM" value="${(s.class_time||'').replace(/"/g,'&quot;')}">
+      <label class="fl" style="margin-top:10px;display:block">Parent Login PIN (4 digits)</label>
+      <input class="fi" id="edPin" maxlength="4" inputmode="numeric" placeholder="Not set" value="${s.parent_pin||''}">
+      <div style="font-size:12px;color:rgba(245,230,192,.5);margin-top:5px">Parent signs in with the email above + this PIN.</div>
       <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
         <button onclick="closeEditStudent()" style="background:transparent;border:1px solid rgba(245,230,192,.4);color:rgba(245,230,192,.8);padding:8px 16px;border-radius:5px;cursor:pointer">Cancel</button>
         <button onclick="saveStudentEdit(${s.id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:8px 16px;border-radius:5px;cursor:pointer">Save</button>
@@ -1366,15 +1382,18 @@ function closeEditStudent() {
 }
 
 function saveStudentEdit(studentId) {
+  const pin = document.getElementById('edPin').value.trim();
   const payload = {
     name: document.getElementById('edName').value.trim(),
     email: document.getElementById('edEmail').value.trim() || null,
     parent_email: document.getElementById('edEmail').value.trim() || null,
     phone: document.getElementById('edPhone').value.trim() || null,
     class_day: document.getElementById('edDay').value || null,
-    class_time: document.getElementById('edTime').value.trim() || null
+    class_time: document.getElementById('edTime').value.trim() || null,
+    parent_pin: pin || null
   };
   if (!payload.name) { toast('Name is required', 'error'); return; }
+  if (pin && !/^\d{4}$/.test(pin)) { toast('PIN must be exactly 4 digits', 'error'); return; }
 
   showLoading();
   fetch(`${API_BASE}/api/students/${studentId}`, {
@@ -1407,10 +1426,16 @@ function registerStudent() {
   const dob = document.getElementById('regDOB').value;
   const classDay = document.getElementById('regClassDay').value;
   const classTime = document.getElementById('regClassTime').value.trim();
+  const pin = (document.getElementById('regPin') || {}).value?.trim() || '';
 
   if (!name) {
     showLoading(false);
     toast('Name is required', 'error');
+    return;
+  }
+  if (pin && !/^\d{4}$/.test(pin)) {
+    showLoading(false);
+    toast('PIN must be exactly 4 digits', 'error');
     return;
   }
 
@@ -1424,7 +1449,8 @@ function registerStudent() {
       phone: phone || null,
       date_of_birth: dob || null,
       class_day: classDay || null,
-      class_time: classTime || null
+      class_time: classTime || null,
+      parent_pin: pin || null
     })
   })
   .then(async resp => {
@@ -1433,8 +1459,12 @@ function registerStudent() {
     return body;
   })
   .then(data => {
-    toast('Student registered!', 'success');
-    ['regName','regEmail','regPhone','regDOB','regClassDay','regClassTime']
+    if (data.parent_pin) {
+      toast(`Registered! Parent signs in with their email + PIN ${data.parent_pin}`, 'success');
+    } else {
+      toast(data.warning || 'Registered, but no PIN set - parent cannot log in yet', 'error');
+    }
+    ['regName','regEmail','regPhone','regDOB','regClassDay','regClassTime','regPin']
       .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     loadStudents();
     loadStudentsForPayment();

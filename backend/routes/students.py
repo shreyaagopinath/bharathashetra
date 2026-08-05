@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models import Student, User, Parent
 from datetime import datetime
+import re
 
 students_bp = Blueprint('students', __name__)
 
@@ -51,6 +52,7 @@ def get_students():
         'parent_email': s.parent_email,
         'class_day': s.class_day,
         'class_time': s.class_time,
+        'parent_pin': s.parent_pin if user.role == 'admin' else None,
         'status': s.status,
         'date_of_birth': s.date_of_birth.isoformat() if s.date_of_birth else None,
         'registration_date': s.registration_date.isoformat()
@@ -113,6 +115,18 @@ def create_student():
             parent = Parent.query.filter_by(user_id=user_id).first()
             parent_id = parent.id if parent else None
 
+        # Parent login PIN. Without this a manually-registered student cannot
+        # log in at all: parent_login matches on (parent_email, parent_pin) and
+        # a NULL pin never matches. Mirrors the CSV import rule - explicit PIN
+        # if given, otherwise the last 4 digits of the phone number.
+        parent_pin = (data.get('parent_pin') or '').strip()
+        if parent_pin:
+            if len(parent_pin) != 4 or not parent_pin.isdigit():
+                return jsonify({'error': 'PIN must be exactly 4 digits'}), 400
+        else:
+            digits = re.sub(r'\D', '', data.get('phone') or '')
+            parent_pin = digits[-4:] if len(digits) >= 4 else None
+
         # Convert date string to Python date object
         dob = data.get('date_of_birth')
         if dob and isinstance(dob, str):
@@ -131,16 +145,22 @@ def create_student():
             date_of_birth=dob,
             class_day=(data.get('class_day') or '').strip() or None,
             class_time=(data.get('class_time') or '').strip() or None,
+            parent_pin=parent_pin,
             parent_id=parent_id,
             status='active'
         )
         db.session.add(student)
         db.session.commit()
 
-        return jsonify({
+        resp = {
             'message': 'Student registered',
-            'student_id': student.id
-        }), 201
+            'student_id': student.id,
+            'parent_pin': parent_pin
+        }
+        if not parent_pin:
+            resp['warning'] = ('No PIN set - this parent cannot log in yet. Add a phone '
+                               'number or set a 4-digit PIN via Edit.')
+        return jsonify(resp), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
@@ -201,6 +221,14 @@ def update_student(student_id):
             student.class_day = data['class_day']
         if 'class_time' in data:
             student.class_time = data['class_time']
+        if 'parent_email' in data:
+            student.parent_email = data['parent_email']
+        if 'parent_pin' in data and user.role == 'admin':
+            pin = (data.get('parent_pin') or '').strip()
+            if pin:
+                if len(pin) != 4 or not pin.isdigit():
+                    return jsonify({'error': 'PIN must be exactly 4 digits'}), 400
+                student.parent_pin = pin
         if 'status' in data and user.role == 'admin':
             student.status = data['status']
 
