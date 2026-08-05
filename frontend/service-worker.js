@@ -1,8 +1,6 @@
-const CACHE_NAME = 'bharathashetra-v1';
+const CACHE_NAME = 'bharathashetra-v2';
 const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/login.html'
+  '/'
 ];
 
 // Install event - cache essential files
@@ -64,21 +62,29 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // For HTML/static files, use cache first strategy
+  // Skip caching HTML files (always fetch fresh)
+  if (request.url.includes('.html')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // For other static files, use cache first strategy
   event.respondWith(
     caches.match(request).then(cached => {
-      return cached || fetch(request)
+      if (cached) return cached;
+
+      return fetch(request)
         .then(response => {
           if (!response || response.status !== 200 || response.type === 'error') {
             return response;
           }
-          // Clone before caching to avoid "body already used" error
+          // Clone and cache
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then(c => c.put(request, responseClone));
           return response;
         })
         .catch(() => {
-          return caches.match(request) || new Response('Offline - Page unavailable', { status: 503 });
+          return caches.match(request) || new Response('Offline', { status: 503 });
         });
     })
   );
