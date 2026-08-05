@@ -957,6 +957,7 @@ button[style*="background:var(--am)"] {
     <button onclick="showParentSec('photos',this)">📸 Photos</button>
     <button onclick="showParentSec('stage',this)">Stage Ready</button>
     <button onclick="showParentSec('contact',this)">💬 Contact</button>
+    <button onclick="showParentSec('settings',this)">⚙ Settings</button>
   </nav>
 
   <main>
@@ -1062,6 +1063,25 @@ button[style*="background:var(--am)"] {
         <div class="fg"><label class="fl">Message</label><textarea class="fi" id="contactMessage" rows="4" placeholder="Your message..."></textarea></div>
         <button onclick="sendContactMessage()" style="width:100%;background:transparent;border:1px solid rgba(212,164,55,0.5);color:var(--am);padding:9px 20px;border-radius:6px;font-family:'Raleway',sans-serif;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s">Send Message</button>
         <div id="contactStatus" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="psec" id="psec-settings">
+      <div class="pgh"><div class="pgt">Settings</div><div class="pgs">Manage your login</div></div>
+      <div class="af" style="max-width:460px">
+        <div class="aft">Change Your PIN</div>
+        <div style="font-size:14px;color:rgba(245,230,192,.6);margin-bottom:14px">
+          You sign in with your email and a 4-digit PIN. Pick something only you know.
+        </div>
+        <div class="fg"><label class="fl">Current PIN</label>
+          <input class="fi" id="curPin" type="password" maxlength="4" inputmode="numeric" autocomplete="current-password" placeholder="••••"></div>
+        <div class="fg"><label class="fl">New PIN</label>
+          <input class="fi" id="newPin" type="password" maxlength="4" inputmode="numeric" autocomplete="new-password" placeholder="••••"></div>
+        <div class="fg"><label class="fl">Confirm New PIN</label>
+          <input class="fi" id="newPin2" type="password" maxlength="4" inputmode="numeric" autocomplete="new-password" placeholder="••••"></div>
+        <button onclick="changePin()" style="width:100%;margin-top:8px;background:transparent;border:1px solid rgba(212,164,55,0.5);color:var(--am);padding:10px 20px;border-radius:6px;font-family:'Raleway',sans-serif;font-size:12px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s">Update PIN</button>
+        <div id="pinStatus" style="margin-top:12px;font-size:14px"></div>
       </div>
     </div>
   </main>
@@ -1836,6 +1856,39 @@ async function loadParentData() {
     document.getElementById('stageReadyVideos').innerHTML = videoHtml;
   } catch (err) {
     console.error('Error loading parent data:', err);
+  }
+}
+
+async function changePin() {
+  const cur = document.getElementById('curPin').value.trim();
+  const nu = document.getElementById('newPin').value.trim();
+  const nu2 = document.getElementById('newPin2').value.trim();
+  const status = document.getElementById('pinStatus');
+  const fail = (m) => { status.innerHTML = `<span style="color:#d9534f">${m}</span>`; };
+
+  if (!cur || !nu || !nu2) return fail('Please fill in all three fields.');
+  if (!/^\d{4}$/.test(nu)) return fail('New PIN must be exactly 4 digits.');
+  if (nu !== nu2) return fail('New PINs do not match.');
+  if (nu === cur) return fail('New PIN must be different from your current one.');
+
+  status.innerHTML = '<span style="color:rgba(245,230,192,.6)">Updating…</span>';
+  showLoading();
+  try {
+    const resp = await fetch(`${API_BASE}/api/auth/change-pin`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ current_pin: cur, new_pin: nu })
+    });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) return fail(body.error || `Could not update PIN (HTTP ${resp.status})`);
+
+    status.innerHTML = '<span style="color:var(--gn)">✓ PIN updated. Use your new PIN next time you sign in.</span>';
+    ['curPin','newPin','newPin2'].forEach(id => document.getElementById(id).value = '');
+    toast('PIN updated', 'success');
+  } catch (e) {
+    fail('Connection error: ' + e.message);
+  } finally {
+    showLoading(false);
   }
 }
 

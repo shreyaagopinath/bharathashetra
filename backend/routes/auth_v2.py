@@ -54,6 +54,63 @@ def parent_login():
         'student_name': student.name
     }, 200
 
+# ============= CHANGE PIN =============
+@auth_bp.route('/change-pin', methods=['POST'])
+def change_pin():
+    """Parent changes their own 4-digit login PIN."""
+    from flask_jwt_extended import jwt_required, verify_jwt_in_request, get_jwt
+
+    try:
+        verify_jwt_in_request()
+    except Exception:
+        return {'error': 'Not signed in'}, 401
+
+    claims = get_jwt()
+    if claims.get('role') != 'parent':
+        return {'error': 'Only parents can change a PIN here'}, 403
+
+    email = claims.get('email')
+    if not email:
+        return {'error': 'Could not identify account'}, 400
+
+    data = request.get_json() or {}
+    current_pin = (data.get('current_pin') or '').strip()
+    new_pin = (data.get('new_pin') or '').strip()
+
+    if not current_pin or not new_pin:
+        return {'error': 'Current and new PIN are both required'}, 400
+    if len(new_pin) != 4 or not new_pin.isdigit():
+        return {'error': 'New PIN must be exactly 4 digits'}, 400
+    if new_pin == current_pin:
+        return {'error': 'New PIN must be different from the current one'}, 400
+
+    # One parent email can cover several siblings - all must stay in sync,
+    # otherwise login would still succeed with the old PIN via another student.
+    students = Student.query.filter_by(parent_email=email).all()
+    if not students:
+        return {'error': 'No students found for this account'}, 404
+
+    if not any(s.parent_pin == current_pin for s in students):
+        return {'error': 'Current PIN is incorrect'}, 401
+
+    try:
+        for s in students:
+            s.parent_pin = new_pin
+
+        # parent_login also stores the PIN as the User password hash
+        user = User.query.filter_by(email=email, role='parent').first()
+        if user:
+            user.set_password(new_pin)
+
+        db.session.commit()
+        return {
+            'message': 'PIN updated',
+            'students_updated': len(students)
+        }, 200
+    except Exception as e:
+        db.session.rollback()
+        return {'error': str(e)}, 500
+
 # ============= ADMIN LOGIN =============
 @auth_bp.route('/admin-login', methods=['POST'])
 def admin_login():
