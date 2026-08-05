@@ -1246,8 +1246,8 @@ function addVideo() {
 }
 
 function createAnnouncement() {
-  const title = document.getElementById('annTitle').value;
-  const content = document.getElementById('annContent').value;
+  const title = document.getElementById('annTitle').value.trim();
+  const content = document.getElementById('annContent').value.trim();
   const priority = parseInt(document.getElementById('annPriority').value) || 0;
 
   if (!title || !content) {
@@ -1255,9 +1255,18 @@ function createAnnouncement() {
     return;
   }
 
-  API.request('/announcements', {
+  showLoading();
+  fetch('https://bharathashetra.onrender.com/api/announcements', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+    },
     body: JSON.stringify({title, content, priority})
+  })
+  .then(resp => {
+    if (!resp.ok) throw new Error('Failed to post announcement');
+    return resp.json();
   })
   .then(() => {
     toast('Announcement posted!', 'success');
@@ -1265,7 +1274,11 @@ function createAnnouncement() {
     document.getElementById('annContent').value = '';
     loadAnnouncements();
   })
-  .catch(err => toast(err.message, 'error'));
+  .catch(err => {
+    console.error(err);
+    toast('Error posting announcement', 'error');
+  })
+  .finally(() => showLoading(false));
 }
 
 function importCSVFile() {
@@ -2424,9 +2437,12 @@ async function loadStudentsForPayment() {
     const response = await fetch('https://bharathashetra.onrender.com/api/students', {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
-    allStudentsForPayment = await response.json();
+    const data = await response.json();
+    allStudentsForPayment = Array.isArray(data) ? data : [];
+    console.log('Loaded students for payment:', allStudentsForPayment.length);
   } catch (e) {
     console.error('Error loading students:', e);
+    allStudentsForPayment = [];
   }
 }
 
@@ -2571,11 +2587,13 @@ function selectRecitalStudent(studentId, studentName) {
 let allPayments = [];
 
 async function loadPaymentsWithStudentData() {
+  showLoading();
   try {
     // Get all payments
     const payResp = await fetch('https://bharathashetra.onrender.com/api/payments', {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
+    if (!payResp.ok) throw new Error('Failed to load payments');
     let payments = await payResp.json();
     if (!Array.isArray(payments)) payments = [];
 
@@ -2583,6 +2601,7 @@ async function loadPaymentsWithStudentData() {
     const studResp = await fetch('https://bharathashetra.onrender.com/api/students', {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
+    if (!studResp.ok) throw new Error('Failed to load students');
     let students = await studResp.json();
     if (!Array.isArray(students)) students = [];
 
@@ -2601,6 +2620,8 @@ async function loadPaymentsWithStudentData() {
   } catch (e) {
     console.error('Error loading payments:', e);
     toast('Error loading payments', 'error');
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -2626,9 +2647,9 @@ function filterPayments() {
 
   // Filter by payment status
   if (status === 'paid') {
-    filtered = filtered.filter(p => p.paid === true);
+    filtered = filtered.filter(p => p.status === 'paid');
   } else if (status === 'unpaid') {
-    filtered = filtered.filter(p => p.paid === false);
+    filtered = filtered.filter(p => p.status === 'unpaid');
   }
 
   // Render filtered payments
