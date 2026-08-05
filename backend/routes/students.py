@@ -96,6 +96,18 @@ def create_student():
     data = request.get_json()
 
     try:
+        # Validate required fields
+        if not data.get('name'):
+            return jsonify({'error': 'Student name is required'}), 400
+
+        # Validate email format if provided
+        if data.get('email'):
+            email = data.get('email').strip()
+            if '@' not in email or '.' not in email:
+                return jsonify({'error': 'Invalid email format'}), 400
+        else:
+            email = None
+
         parent_id = None
         if user.role == 'parent':
             parent = Parent.query.filter_by(user_id=user_id).first()
@@ -104,12 +116,17 @@ def create_student():
         # Convert date string to Python date object
         dob = data.get('date_of_birth')
         if dob and isinstance(dob, str):
-            dob = datetime.strptime(dob, '%Y-%m-%d').date()
+            try:
+                dob = datetime.strptime(dob, '%Y-%m-%d').date()
+            except ValueError:
+                return jsonify({'error': 'Invalid date format (use YYYY-MM-DD)'}), 400
+        else:
+            dob = None
 
         student = Student(
-            name=data.get('name'),
-            email=data.get('email'),
-            phone=data.get('phone'),
+            name=data.get('name').strip(),
+            email=email,
+            phone=data.get('phone', '').strip() or None,
             date_of_birth=dob,
             parent_id=parent_id,
             status='active'
@@ -182,6 +199,28 @@ def update_student(student_id):
 
         db.session.commit()
         return jsonify({'message': 'Student updated'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@students_bp.route('/<int:student_id>', methods=['DELETE'])
+@jwt_required()
+def delete_student(student_id):
+    """Delete a student (admin only)"""
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    student = Student.query.get(student_id)
+    if not student:
+        return jsonify({'error': 'Student not found'}), 404
+
+    try:
+        db.session.delete(student)
+        db.session.commit()
+        return jsonify({'message': 'Student deleted'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500

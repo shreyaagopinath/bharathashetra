@@ -1634,6 +1634,43 @@ function toast(msg, type = 'info') {
   setTimeout(() => t.remove(), 3000);
 }
 
+function showLoading(show = true) {
+  let overlay = document.getElementById('loadingOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'loadingOverlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:flex;justify-content:center;align-items:center;z-index:9999';
+    overlay.innerHTML = '<div style="color:var(--bgo);font-size:24px;text-align:center;"><div>Loading...</div></div>';
+    document.body.appendChild(overlay);
+  }
+  overlay.style.display = show ? 'flex' : 'none';
+}
+
+async function deleteStudent(studentId) {
+  if (!confirm('Delete this student permanently?')) return;
+
+  showLoading();
+  try {
+    const resp = await fetch(`https://bharathashetra.onrender.com/api/students/${studentId}`, {
+      method: 'DELETE',
+      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+    });
+
+    if (resp.ok) {
+      toast('Student deleted successfully', 'success');
+      loadStudents();
+    } else {
+      const data = await resp.json();
+      toast(data.error || 'Failed to delete student', 'error');
+    }
+  } catch (e) {
+    console.error(e);
+    toast('Error deleting student', 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
 function doLogout() {
   if (confirm('Logout?')) {
     localStorage.removeItem('authToken');
