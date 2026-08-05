@@ -30,23 +30,60 @@ def calculate_late_fee(payment_date, month_paid_for):
 @payments_bp.route('', methods=['GET'])
 @jwt_required()
 def get_all_payments():
-    """Get all payments (admin only)"""
+    """Payment roster: every student + their payment status for a given month (admin only).
+
+    Returns one row per student so 'unpaid' students appear even with no Payment record.
+    Optional query params: month (YYYY-MM), class_day, class_time, status (paid|unpaid).
+    """
+    from datetime import date
+
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
 
     if user.role != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
 
-    payments = Payment.query.order_by(Payment.payment_date.desc()).all()
-    return jsonify([{
-        'id': p.id,
-        'student_id': p.student_id,
-        'amount': p.amount,
-        'late_fee_applied': p.late_fee_applied,
-        'payment_date': p.payment_date.isoformat() if p.payment_date else None,
-        'month_paid_for': p.month_paid_for,
-        'status': p.status
-    } for p in payments]), 200
+    today = date.today()
+    month = request.args.get('month') or f"{today.year}-{today.month:02d}"
+
+    students = Student.query.order_by(Student.name).all()
+    payments = Payment.query.filter_by(month_paid_for=month).all()
+    by_student = {p.student_id: p for p in payments}
+
+    PAID_STATES = ('paid', 'completed', 'success', 'succeeded')
+
+    rows = []
+    for s in students:
+        p = by_student.get(s.id)
+        is_paid = bool(p and (p.status or '').lower() in PAID_STATES)
+        rows.append({
+            'payment_id': p.id if p else None,
+            'student_id': s.id,
+            'student_name': s.name,
+            'parent_email': s.parent_email or s.email,
+            'class_day': s.class_day,
+            'class_time': s.class_time,
+            'month_paid_for': month,
+            'amount': (p.amount if p else 0) or 0,
+            'late_fee_applied': (p.late_fee_applied if p else 0) or 0,
+            'payment_method': p.payment_method if p else None,
+            'payment_date': p.payment_date.isoformat() if (p and p.payment_date) else None,
+            'raw_status': p.status if p else None,
+            'status': 'paid' if is_paid else 'unpaid'
+        })
+
+    # Server-side filters (frontend also filters client-side)
+    class_day = request.args.get('class_day')
+    class_time = request.args.get('class_time')
+    status = request.args.get('status')
+    if class_day:
+        rows = [r for r in rows if r['class_day'] == class_day]
+    if class_time:
+        rows = [r for r in rows if (r['class_time'] or '').lower() == class_time.lower()]
+    if status in ('paid', 'unpaid'):
+        rows = [r for r in rows if r['status'] == status]
+
+    return jsonify(rows), 200
 
 @payments_bp.route('/student/<int:student_id>', methods=['GET'])
 @jwt_required()

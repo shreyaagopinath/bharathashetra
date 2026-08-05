@@ -640,10 +640,13 @@ button[style*="background:var(--am)"] {
             <option>Thursday</option>
             <option>Friday</option>
             <option>Saturday</option>
+            <option>Sunday</option>
           </select>
         </div>
         <div class="fg"><label class="fl">Class Time</label>
-          <input class="fi" id="filterPayTime" placeholder="e.g. 3:00 PM" onchange="filterPayments()">
+          <select class="fs" id="filterPayTime" onchange="filterPayments()">
+            <option value="">All Times</option>
+          </select>
         </div>
       </div>
       <div class="frow">
@@ -664,9 +667,9 @@ button[style*="background:var(--am)"] {
     </div>
 
     <div class="af" style="margin-top:20px">
-      <div class="aft">Recent Payments (All Time)</div>
+      <div class="aft">Payment Roster — This Month</div>
       <div class="tw">
-        <div class="th-row"><div class="th">Student</div><div class="th">Amount</div><div class="th">Date</div><div class="th">Method</div><div class="th">Action</div></div>
+        <div class="th-row" style="grid-template-columns:1.4fr 1.2fr .8fr 1fr .9fr 1fr"><div class="th">Student</div><div class="th">Class</div><div class="th">Amount</div><div class="th">Date Paid</div><div class="th">Status</div><div class="th">Action</div></div>
         <div id="recentPaymentsList"><div class="lds"><div class="spin"></div></div></div>
       </div>
     </div>
@@ -781,7 +784,7 @@ button[style*="background:var(--am)"] {
       <button class="bgld" onclick="registerStudent()">Register</button>
     </div>
     <div class="tw">
-      <div class="th-row"><div class="th">Student</div><div class="th">Email</div><div class="th">Phone</div><div class="th">Status</div><div class="th">Actions</div></div>
+      <div class="th-row" style="grid-template-columns:1.4fr 1.6fr 1fr 1fr 1fr .8fr 1.2fr"><div class="th">Student</div><div class="th">Email</div><div class="th">Phone</div><div class="th">Class Day</div><div class="th">Class Time</div><div class="th">Status</div><div class="th">Actions</div></div>
       <div id="regBody"></div>
     </div>
   </div>
@@ -1107,6 +1110,15 @@ button[style*="background:var(--am)"] {
 <script src="js/api.js"></script>
 
 <script>
+// Base URL for all direct fetch calls (no trailing /api)
+const API_BASE = (localStorage.getItem('apiUrl') || 'https://bharathashetra.onrender.com/api').replace(/\/api\/?$/, '');
+
+function authHeaders(json = true) {
+  const h = { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') };
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
 // Initialize on load
 window.addEventListener('DOMContentLoaded', async () => {
   if (!Auth.isAuthenticated()) {
@@ -1219,12 +1231,12 @@ function recordPayment() {
   .catch(err => toast(err.message, 'error'));
 }
 
+let allStudentsCache = [];
+
 async function loadStudents() {
   try {
     showLoading();
-    const resp = await fetch('https://bharathashetra.onrender.com/api/students', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
-    });
+    const resp = await fetch(`${API_BASE}/api/students`, { headers: authHeaders(false) });
     if (!resp.ok) throw new Error('Failed to load students');
 
     const students = await resp.json();
@@ -1236,15 +1248,18 @@ async function loadStudents() {
       return;
     }
 
+    allStudentsCache = students;
     body.innerHTML = students.map(s => `
-      <div class="tr">
-        <div class="td">${s.name}</div>
-        <div class="td">${s.email || '-'}</div>
+      <div class="tr" style="grid-template-columns:1.4fr 1.6fr 1fr 1fr 1fr .8fr 1.2fr">
+        <div class="td">${s.name || '-'}</div>
+        <div class="td">${s.email || s.parent_email || '-'}</div>
         <div class="td">${s.phone || '-'}</div>
+        <div class="td">${s.class_day || '-'}</div>
+        <div class="td">${s.class_time || '-'}</div>
         <div class="td">${s.status || 'active'}</div>
         <div class="td">
-          <button onclick="editStudent(${s.id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:5px 10px;cursor:pointer;font-size:12px;margin-right:5px;">Edit</button>
-          <button onclick="deleteStudent(${s.id})" style="background:transparent;border:1px solid var(--rd);color:var(--rd);padding:5px 10px;cursor:pointer;font-size:12px;">Delete</button>
+          <button onclick="editStudent(${s.id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:4px 8px;cursor:pointer;font-size:12px;margin-right:4px;border-radius:4px;">Edit</button>
+          <button onclick="deleteStudent(${s.id})" style="background:transparent;border:1px solid #d9534f;color:#d9534f;padding:4px 8px;cursor:pointer;font-size:12px;border-radius:4px;">Delete</button>
         </div>
       </div>
     `).join('');
@@ -1257,28 +1272,68 @@ async function loadStudents() {
 }
 
 function editStudent(studentId) {
-  const classDay = prompt('Class Day (Monday/Tuesday/etc):');
-  if (!classDay) return;
+  const s = allStudentsCache.find(x => x.id === studentId);
+  if (!s) return;
 
-  const classTime = prompt('Class Time (e.g. 3:00 PM):');
-  if (!classTime) return;
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  let modal = document.getElementById('editStudentModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'editStudentModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:10000';
+    document.body.appendChild(modal);
+  }
+  modal.innerHTML = `
+    <div style="background:#1a1410;border:1px solid var(--bgo);border-radius:10px;padding:24px;width:min(460px,92vw)">
+      <div style="color:var(--bgo);font-size:20px;margin-bottom:16px">Edit Student</div>
+      <label class="fl">Name</label><input class="fi" id="edName" value="${(s.name||'').replace(/"/g,'&quot;')}">
+      <label class="fl" style="margin-top:10px;display:block">Email</label><input class="fi" id="edEmail" value="${(s.email||s.parent_email||'').replace(/"/g,'&quot;')}">
+      <label class="fl" style="margin-top:10px;display:block">Phone</label><input class="fi" id="edPhone" value="${(s.phone||'').replace(/"/g,'&quot;')}">
+      <label class="fl" style="margin-top:10px;display:block">Class Day</label>
+      <select class="fs" id="edDay"><option value="">-- none --</option>${days.map(d=>`<option ${s.class_day===d?'selected':''}>${d}</option>`).join('')}</select>
+      <label class="fl" style="margin-top:10px;display:block">Class Time</label><input class="fi" id="edTime" placeholder="e.g. 3:00 PM" value="${(s.class_time||'').replace(/"/g,'&quot;')}">
+      <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+        <button onclick="closeEditStudent()" style="background:transparent;border:1px solid rgba(245,230,192,.4);color:rgba(245,230,192,.8);padding:8px 16px;border-radius:5px;cursor:pointer">Cancel</button>
+        <button onclick="saveStudentEdit(${s.id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:8px 16px;border-radius:5px;cursor:pointer">Save</button>
+      </div>
+    </div>`;
+  modal.style.display = 'flex';
+}
+
+function closeEditStudent() {
+  const m = document.getElementById('editStudentModal');
+  if (m) m.style.display = 'none';
+}
+
+function saveStudentEdit(studentId) {
+  const payload = {
+    name: document.getElementById('edName').value.trim(),
+    email: document.getElementById('edEmail').value.trim() || null,
+    parent_email: document.getElementById('edEmail').value.trim() || null,
+    phone: document.getElementById('edPhone').value.trim() || null,
+    class_day: document.getElementById('edDay').value || null,
+    class_time: document.getElementById('edTime').value.trim() || null
+  };
+  if (!payload.name) { toast('Name is required', 'error'); return; }
 
   showLoading();
-  fetch(`https://bharathashetra.onrender.com/api/students/${studentId}`, {
+  fetch(`${API_BASE}/api/students/${studentId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + localStorage.getItem('authToken')
     },
-    body: JSON.stringify({class_day: classDay, class_time: classTime})
+    body: JSON.stringify(payload)
   })
-  .then(resp => {
-    if (!resp.ok) throw new Error('Failed to update');
+  .then(async resp => {
+    if (!resp.ok) throw new Error((await resp.json().catch(()=>({}))).error || 'Failed to update');
     return resp.json();
   })
   .then(() => {
-    toast('Class times updated!', 'success');
+    toast('Student updated', 'success');
+    closeEditStudent();
     loadStudents();
+    loadStudentsForPayment();
   })
   .catch(err => toast('Update failed: ' + err.message, 'error'))
   .finally(() => showLoading(false));
@@ -1299,34 +1354,30 @@ function registerStudent() {
     return;
   }
 
-  fetch('https://bharathashetra.onrender.com/api/students', {
+  fetch(`${API_BASE}/api/students`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-    },
+    headers: authHeaders(),
     body: JSON.stringify({
       name,
       email: email || null,
+      parent_email: email || null,
       phone: phone || null,
       date_of_birth: dob || null,
       class_day: classDay || null,
       class_time: classTime || null
     })
   })
-  .then(resp => {
-    if (!resp.ok) throw new Error('Registration failed');
-    return resp.json();
+  .then(async resp => {
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(body.error || `Registration failed (HTTP ${resp.status})`);
+    return body;
   })
   .then(data => {
     toast('Student registered!', 'success');
-    document.getElementById('regName').value = '';
-    document.getElementById('regEmail').value = '';
-    document.getElementById('regPhone').value = '';
-    document.getElementById('regDOB').value = '';
-    document.getElementById('regClassDay').value = '';
-    document.getElementById('regClassTime').value = '';
-    loadStudents(); // Refresh the list
+    ['regName','regEmail','regPhone','regDOB','regClassDay','regClassTime']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    loadStudents();
+    loadStudentsForPayment();
   })
   .catch(err => {
     console.error('Registration error:', err);
@@ -1776,14 +1827,15 @@ async function deleteStudent(studentId) {
 
   showLoading();
   try {
-    const resp = await fetch(`https://bharathashetra.onrender.com/api/students/${studentId}`, {
+    const resp = await fetch(`${API_BASE}/api/students/${studentId}`, {
       method: 'DELETE',
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+      headers: authHeaders(false)
     });
 
     if (resp.ok) {
       toast('Student deleted successfully', 'success');
       loadStudents();
+      loadStudentsForPayment();
     } else {
       const data = await resp.json();
       toast(data.error || 'Failed to delete student', 'error');
@@ -2551,10 +2603,10 @@ async function markAttendance(studentId, status, day, time) {
 async function loadStudentsForPayment() {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-    const response = await fetch('https://bharathashetra.onrender.com/api/students', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')},
+    const response = await fetch(`${API_BASE}/api/students`, {
+      headers: authHeaders(false),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -2563,15 +2615,15 @@ async function loadStudentsForPayment() {
     const data = await response.json();
     allStudentsForPayment = Array.isArray(data) ? data : [];
     console.log('✓ Loaded students for payment:', allStudentsForPayment.length);
+    return allStudentsForPayment;
   } catch (e) {
     console.error('✗ Error loading students:', e);
-    allStudentsForPayment = [];
-    toast('Failed to load students', 'error');
+    return allStudentsForPayment;
   }
 }
 
-function searchPaymentStudents() {
-  const query = document.getElementById('paySearchInput').value.toLowerCase();
+async function searchPaymentStudents() {
+  const query = document.getElementById('paySearchInput').value.trim().toLowerCase();
   const resultsDiv = document.getElementById('paySearchResults');
 
   if (!query) {
@@ -2581,33 +2633,41 @@ function searchPaymentStudents() {
     return;
   }
 
-  const filtered = allStudentsForPayment.filter(s =>
-    s.name.toLowerCase().includes(query) ||
-    (s.parent_email && s.parent_email.toLowerCase().includes(query))
-  );
+  // Lazy-load if the initial page-load fetch failed or hasn't finished
+  if (!Array.isArray(allStudentsForPayment) || allStudentsForPayment.length === 0) {
+    resultsDiv.innerHTML = '<div style="color:rgba(245,230,192,.5)">Loading students…</div>';
+    await loadStudentsForPayment();
+    if (allStudentsForPayment.length === 0) {
+      resultsDiv.innerHTML = '<div style="color:#d9534f">Could not load students. Check your connection and try again.</div>';
+      return;
+    }
+  }
+
+  const filtered = allStudentsForPayment.filter(s => {
+    const hay = [s.name, s.first_name, s.last_name, s.email, s.parent_email, s.phone]
+      .filter(Boolean).join(' ').toLowerCase();
+    return hay.includes(query);
+  });
 
   if (filtered.length === 0) {
     resultsDiv.innerHTML = '<div style="color:rgba(245,230,192,.4)">No students found</div>';
     return;
   }
 
-  let html = '';
-  filtered.slice(0, 10).forEach(student => {
-    html += `
-      <div style="padding:8px;background:rgba(201,153,58,0.1);border-radius:5px;margin-bottom:6px;cursor:pointer" onclick="selectPaymentStudent(${student.id}, '${student.name}')">
-        <div style="font-weight:bold">${student.name}</div>
-        <div style="font-size:11px;color:rgba(245,230,192,.6)">${student.parent_email || 'No email'} | ${student.phone || 'No phone'}</div>
-      </div>
-    `;
-  });
-  resultsDiv.innerHTML = html;
+  resultsDiv.innerHTML = filtered.slice(0, 15).map(s => `
+      <div style="padding:8px;background:rgba(201,153,58,0.1);border-radius:5px;margin-bottom:6px;cursor:pointer" onclick="selectPaymentStudent(${s.id})">
+        <div style="font-weight:bold">${s.name || '(no name)'}</div>
+        <div style="font-size:12px;color:rgba(245,230,192,.6)">${s.email || s.parent_email || 'No email'} | ${s.class_day || '—'} ${s.class_time || ''}</div>
+      </div>`).join('');
 }
 
-function selectPaymentStudent(studentId, studentName) {
+function selectPaymentStudent(studentId) {
+  const s = allStudentsForPayment.find(x => x.id === studentId);
+  if (!s) return;
   selectedPaymentStudentId = studentId;
-  document.getElementById('selectedPayName').textContent = studentName;
+  document.getElementById('selectedPayName').textContent = s.name;
   document.getElementById('selectedPaymentStudent').style.display = 'block';
-  document.getElementById('paySearchInput').value = studentName;
+  document.getElementById('paySearchInput').value = s.name;
   document.getElementById('paySearchResults').innerHTML = '';
 }
 
@@ -2714,96 +2774,104 @@ async function loadPaymentsWithStudentData() {
   showLoading();
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
 
-    // Get all payments
-    const payResp = await fetch('https://bharathashetra.onrender.com/api/payments', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')},
+    const payResp = await fetch(`${API_BASE}/api/payments`, {
+      headers: authHeaders(false),
       signal: controller.signal
     });
-    if (!payResp.ok) throw new Error(`Payments: HTTP ${payResp.status}`);
-    let payments = await payResp.json();
-    if (!Array.isArray(payments)) payments = [];
-    console.log('✓ Loaded payments:', payments.length);
-
-    // Get all students with class info
-    const studResp = await fetch('https://bharathashetra.onrender.com/api/students', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')},
-      signal: controller.signal
-    });
-    if (!studResp.ok) throw new Error(`Students: HTTP ${studResp.status}`);
-    let students = await studResp.json();
-    if (!Array.isArray(students)) students = [];
-    console.log('✓ Loaded students:', students.length);
     clearTimeout(timeoutId);
 
-    // Merge payment data with student class info
-    allPayments = payments.map(p => {
-      const student = students.find(s => s.id === p.student_id);
-      return {
-        ...p,
-        student_class_day: student?.class_day || null,
-        student_class_time: student?.class_time || null
-      };
-    });
+    if (!payResp.ok) throw new Error(`HTTP ${payResp.status}`);
+    const rows = await payResp.json();
+    allPayments = Array.isArray(rows) ? rows : [];
+    console.log('✓ Payment roster loaded:', allPayments.length);
 
-    // Render all payments initially
-    renderPayments(allPayments);
+    // Populate the class-time filter with the times that actually exist
+    const timeSel = document.getElementById('filterPayTime');
+    if (timeSel && timeSel.tagName === 'SELECT') {
+      const times = [...new Set(allPayments.map(p => p.class_time).filter(Boolean))].sort();
+      const cur = timeSel.value;
+      timeSel.innerHTML = '<option value="">All Times</option>' + times.map(t => `<option ${t === cur ? 'selected' : ''}>${t}</option>`).join('');
+    }
+
+    filterPayments();
   } catch (e) {
     console.error('Error loading payments:', e);
-    toast('Error loading payments', 'error');
+    allPayments = [];
+    document.getElementById('recentPaymentsList').innerHTML =
+      '<div class="tr"><div class="ctm" style="color:#d9534f">Could not load payments — try again in a moment.</div></div>';
   } finally {
     showLoading(false);
   }
 }
 
 function filterPayments() {
-  const day = document.getElementById('filterPayDay').value;
-  const time = document.getElementById('filterPayTime').value;
-  const status = document.getElementById('filterPayStatus').value;
+  const day = (document.getElementById('filterPayDay') || {}).value || '';
+  const time = ((document.getElementById('filterPayTime') || {}).value || '').trim().toLowerCase();
+  const status = (document.getElementById('filterPayStatus') || {}).value || '';
 
-  console.log('Filtering by day:', day, 'time:', time, 'status:', status);
+  let filtered = Array.isArray(allPayments) ? allPayments.slice() : [];
 
-  // Filter the payments based on criteria
-  let filtered = allPayments;
+  if (day) filtered = filtered.filter(p => p.class_day === day);
+  if (time) filtered = filtered.filter(p => (p.class_time || '').toLowerCase().includes(time));
+  if (status) filtered = filtered.filter(p => p.status === status);
 
-  // Filter by class day
-  if (day) {
-    filtered = filtered.filter(p => p.student_class_day === day);
-  }
-
-  // Filter by class time
-  if (time) {
-    filtered = filtered.filter(p => p.student_class_time === time);
-  }
-
-  // Filter by payment status
-  if (status === 'paid') {
-    filtered = filtered.filter(p => p.status === 'paid');
-  } else if (status === 'unpaid') {
-    filtered = filtered.filter(p => p.status === 'unpaid');
-  }
-
-  // Render filtered payments
   renderPayments(filtered);
 }
 
 function renderPayments(payments) {
-  let html = '';
-  payments.forEach(p => {
-    const statusBadge = p.paid ? '<span style="color:var(--gn)">✓ Paid</span>' : '<span style="color:var(--rd)">✕ Unpaid</span>';
-    const classInfo = p.student_class_day && p.student_class_time ? `${p.student_class_day} ${p.student_class_time}` : 'No class';
-    html += `
-      <div class="tr">
-        <div class="snm">${p.student_name}</div>
-        <div class="ctm">$${p.amount}</div>
-        <div class="ctm">${new Date(p.payment_date).toLocaleDateString()}</div>
-        <div class="ctm">${p.payment_method || '-'}</div>
-        <div class="ctm">${statusBadge}</div>
-      </div>
-    `;
-  });
-  document.getElementById('recentPaymentsList').innerHTML = html || '<div class="tr"><div class="ctm">No payments match filters</div></div>';
+  const paidCount = payments.filter(p => p.status === 'paid').length;
+  const total = payments.reduce((sum, p) => sum + (Number(p.amount) || 0) + (Number(p.late_fee_applied) || 0), 0);
+
+  const summary = `<div style="padding:10px 12px;margin-bottom:10px;background:rgba(201,153,58,.08);border-radius:6px;font-size:14px">
+      <strong>${payments.length}</strong> student(s) &nbsp;·&nbsp;
+      <span style="color:#5cb85c">${paidCount} paid</span> &nbsp;·&nbsp;
+      <span style="color:#d9534f">${payments.length - paidCount} unpaid</span> &nbsp;·&nbsp;
+      collected: <strong>$${total.toFixed(2)}</strong>
+    </div>`;
+
+  const rows = payments.map(p => {
+    const badge = p.status === 'paid'
+      ? '<span style="color:#5cb85c">✓ Paid</span>'
+      : '<span style="color:#d9534f">✕ Unpaid</span>';
+    const cls = [p.class_day, p.class_time].filter(Boolean).join(' ') || '—';
+    const date = p.payment_date ? new Date(p.payment_date).toLocaleDateString() : '—';
+    const amt = p.status === 'paid' ? `$${((Number(p.amount)||0) + (Number(p.late_fee_applied)||0)).toFixed(2)}` : '—';
+    const action = p.status === 'paid'
+      ? ''
+      : `<button onclick="quickMarkPaid(${p.student_id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:3px 8px;font-size:12px;border-radius:4px;cursor:pointer">Mark Paid</button>`;
+    return `
+      <div class="tr" style="grid-template-columns:1.4fr 1.2fr .8fr 1fr .9fr 1fr">
+        <div class="snm">${p.student_name || '(unnamed)'}</div>
+        <div class="ctm">${cls}</div>
+        <div class="ctm">${amt}</div>
+        <div class="ctm">${date}</div>
+        <div class="ctm">${badge}</div>
+        <div class="ctm">${action}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('recentPaymentsList').innerHTML =
+    summary + (rows || '<div class="tr"><div class="ctm">No students match these filters</div></div>');
+}
+
+async function quickMarkPaid(studentId) {
+  showLoading();
+  try {
+    const resp = await fetch(`${API_BASE}/api/payments/mark-paid`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ student_id: studentId, amount: 80, payment_method: 'cash', notes: 'Marked from payment roster' })
+    });
+    if (!resp.ok) throw new Error((await resp.json().catch(()=>({}))).error || 'Failed');
+    toast('Payment recorded', 'success');
+    await loadPaymentsWithStudentData();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
 }
 
 async function recordRecitalPayment() {

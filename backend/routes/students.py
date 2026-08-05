@@ -126,8 +126,11 @@ def create_student():
         student = Student(
             name=data.get('name').strip(),
             email=email,
-            phone=data.get('phone', '').strip() or None,
+            parent_email=(data.get('parent_email') or email),
+            phone=(data.get('phone') or '').strip() or None,
             date_of_birth=dob,
+            class_day=(data.get('class_day') or '').strip() or None,
+            class_time=(data.get('class_time') or '').strip() or None,
             parent_id=parent_id,
             status='active'
         )
