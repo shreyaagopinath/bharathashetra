@@ -138,6 +138,10 @@ def create_app():
                 print("  HINT: Supabase's direct host (db.<ref>.supabase.co) is IPv6-only")
                 print("        and Render has no outbound IPv6. Use the Supavisor pooler:")
                 print("        postgresql://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:5432/postgres")
+            elif 'password authentication failed' in msg:
+                print("  HINT: On the Supavisor pooler the username must include the project ref,")
+                print("        i.e. 'postgres.<project-ref>' - NOT plain 'postgres'.")
+                print("        Also percent-encode any of @ : / ? # [ ] % in the password.")
             print("=" * 70)
 
     # API Health check + storage diagnostics (no credentials exposed)
@@ -147,11 +151,16 @@ def create_app():
         uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
         engine = 'postgresql' if uri.startswith('postgres') else 'sqlite'
 
-        # Host only - never the password
+        # Host and username only - never the password
         host = None
         m = _re.search(r'@([^/:]+)', uri)
         if m:
             host = m.group(1)
+
+        db_user = None
+        mu = _re.search(r'://([^:/@]+)', uri)
+        if mu:
+            db_user = mu.group(1)
 
         info = {
             'status': 'ok',
@@ -160,8 +169,14 @@ def create_app():
             'persistent': engine == 'postgresql',
             'database_url_env_set': bool(os.getenv('DATABASE_URL')),
             'db_host': host,
+            'db_user': db_user,
             'using_supavisor_pooler': bool(host and 'pooler.supabase.com' in host),
         }
+
+        # The pooler needs 'postgres.<project-ref>', not bare 'postgres'
+        if host and 'pooler.supabase.com' in host and db_user == 'postgres':
+            info['config_error'] = ("Supavisor pooler requires the username 'postgres.<project-ref>', "
+                                    "but DATABASE_URL uses plain 'postgres'. Auth will fail.")
 
         if app.config.get('DB_INIT_ERROR'):
             info['db_init_error'] = app.config['DB_INIT_ERROR']
