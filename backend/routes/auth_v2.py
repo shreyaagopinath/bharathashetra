@@ -58,31 +58,36 @@ def parent_login():
 @auth_bp.route('/admin-login', methods=['POST'])
 def admin_login():
     """Admin login with email + password"""
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
 
-    if not email or not password:
-        return {'error': 'Email and password required'}, 400
+        if not email or not password:
+            return {'error': 'Email and password required'}, 400
 
-    user = User.query.filter_by(email=email, role='admin').first()
+        user = User.query.filter_by(email=email, role='admin').first()
 
-    if not user or not user.check_password(password):
-        return {'error': 'Invalid email or password'}, 401
+        if not user or not user.check_password(password):
+            return {'error': 'Invalid email or password'}, 401
 
-    # Create JWT token (expires in 30 days for persistent login)
-    token = create_access_token(
-        identity=str(user.id),
-        expires_delta=timedelta(days=30),
-        additional_claims={'role': 'admin', 'email': email}
-    )
+        # Create JWT token (expires in 30 days for persistent login)
+        token = create_access_token(
+            identity=str(user.id),
+            expires_delta=timedelta(days=30),
+            additional_claims={'role': 'admin', 'email': email}
+        )
 
-    return {
-        'access_token': token,
-        'user_id': user.id,
-        'role': 'admin',
-        'email': email
-    }, 200
+        return {
+            'access_token': token,
+            'user_id': user.id,
+            'role': 'admin',
+            'email': email
+        }, 200
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return {'error': str(e)}, 500
 
 # ============= GET CURRENT USER =============
 @auth_bp.route('/me', methods=['GET'])
