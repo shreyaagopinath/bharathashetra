@@ -625,7 +625,7 @@ button[style*="background:var(--am)"] {
           <div class="fg"><label class="fl">Method</label><select class="fs" id="payMethod"><option>cash</option><option>zelle</option><option>check</option></select></div>
           <div class="fg"><label class="fl">Notes</label><input class="fi" id="payNotes" placeholder="Optional"></div>
         </div>
-        <button class="bgld" onclick="recordMonthlyPayment()" style="width:100%;background:var(--gn)">✓ Mark Paid ($80)</button>
+        <button class="bgld" onclick="recordMonthlyPayment()" style="width:100%;background:var(--gn)">✓ Mark Paid ($80.00)</button>
       </div>
     </div>
     <div class="af" style="margin-top:20px">
@@ -740,7 +740,7 @@ button[style*="background:var(--am)"] {
 
   <!-- PHOTO LIGHTBOX -->
   <div id="photoLightbox" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);z-index:1000;padding:20px;align-items:center;justify-content:center">
-    <button onclick="closeLightbox()" style="position:absolute;top:20px;right:20px;background:var(--rd);border:none;color:white;padding:10px 15px;border-radius:5px;cursor:pointer;font-weight:bold">✕ Close</button>
+    <button onclick="closeLightbox()" style="position:absolute;top:20px;right:20px;background:transparent;border:none;color:#fff;padding:10px 15px;cursor:pointer;font-weight:bold;font-size:18px">✕ Close</button>
 
     <button onclick="prevPhoto()" style="position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.3);border:none;color:white;font-size:30px;padding:10px 15px;cursor:pointer;border-radius:5px">‹</button>
 
@@ -987,10 +987,16 @@ button[style*="background:var(--am)"] {
         <div id="parentDashPayment"></div>
       </div>
 
+      <!-- Children -->
+      <div class="af">
+        <div class="aft">👧 Your Dancers</div>
+        <div id="dashChildren" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px"></div>
+      </div>
+
       <!-- Class Schedule -->
       <div class="af">
         <div class="aft">📅 Your Class Schedule</div>
-        <div id="dashClassSchedule" style="color:rgba(245,230,192,.6);font-size:13px;padding:12px;background:rgba(201,153,58,0.08);border-radius:6px"></div>
+        <div id="dashClassSchedule" style="color:rgba(245,230,192,.6);font-size:14px;padding:12px;background:rgba(201,153,58,0.08);border-radius:6px"></div>
       </div>
 
       <!-- Announcements -->
@@ -1089,7 +1095,7 @@ button[style*="background:var(--am)"] {
 
 <!-- PARENT PHOTO LIGHTBOX -->
 <div id="parentPhotoLightbox" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.95);z-index:2000;padding:20px;align-items:center;justify-content:center">
-  <button onclick="closeParentLightbox()" style="position:absolute;top:20px;right:20px;background:var(--rd);border:none;color:white;padding:10px 15px;border-radius:5px;cursor:pointer;font-weight:bold;font-size:16px">✕ Close</button>
+  <button onclick="closeParentLightbox()" style="position:absolute;top:20px;right:20px;background:transparent;border:none;color:#fff;padding:10px 15px;cursor:pointer;font-weight:bold;font-size:18px">✕ Close</button>
 
   <button onclick="prevParentPhoto()" style="position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.25);border:none;color:white;font-size:32px;padding:12px 18px;cursor:pointer;border-radius:5px;transition:background 0.2s;hover:background:rgba(255,255,255,0.4)">‹</button>
 
@@ -1704,7 +1710,7 @@ async function loadSettings() {
   }
 }
 
-function savePaymentSettings() {
+async function savePaymentSettings() {
   const monthly = document.getElementById('monthlyFee')?.value || 80;
   const recital = document.getElementById('recitalFee')?.value || 100;
   const lateFee = document.getElementById('lateFee')?.value || 10;
@@ -1712,13 +1718,55 @@ function savePaymentSettings() {
   const lateFeeDays = document.getElementById('lateFeeDays')?.value || 5;
   const zellePhone = document.getElementById('zellePhone')?.value || '';
 
-  toast('Payment settings updated!', 'success');
   localStorage.setItem('monthlyFee', monthly);
   localStorage.setItem('recitalFee', recital);
   localStorage.setItem('lateFee', lateFee);
   localStorage.setItem('paymentDueDay', dueDay);
   localStorage.setItem('lateFeeDays', lateFeeDays);
   localStorage.setItem('zellePhone', zellePhone);
+
+  // The monthly rate must live in the database, not localStorage - parents are
+  // on different devices and would otherwise never see the value you set here.
+  showLoading();
+  try {
+    const resp = await fetch(`${API_BASE}/api/payments/rate`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ monthly_rate: parseFloat(monthly) })
+    });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+    monthlyRate = body.monthly_rate;
+    updateMarkPaidLabel();
+    toast(`Payment settings saved. Rate is now $${body.monthly_rate.toFixed(2)} per child.`, 'success');
+  } catch (e) {
+    toast('Saved locally, but rate did not sync: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+// Current per-child rate, loaded from the server
+let monthlyRate = 80;
+
+async function loadMonthlyRate() {
+  try {
+    const r = await fetch(`${API_BASE}/api/payments/rate`, { headers: authHeaders(false) });
+    if (r.ok) {
+      monthlyRate = (await r.json()).monthly_rate;
+      const field = document.getElementById('monthlyFee');
+      if (field) field.value = monthlyRate;
+      updateMarkPaidLabel();
+    }
+  } catch (e) {
+    console.error('Could not load rate:', e);
+  }
+  return monthlyRate;
+}
+
+function updateMarkPaidLabel() {
+  const btn = document.querySelector('button[onclick="recordMonthlyPayment()"]');
+  if (btn) btn.textContent = `✓ Mark Paid ($${Number(monthlyRate).toFixed(2)})`;
 }
 
 function saveSchoolSettings() {
@@ -1771,14 +1819,51 @@ async function loadParentData() {
 
     // Load student data
     const students = await API.getStudents();
+
+    // One card per child, with class day/time and this month's payment status
+    try {
+      const fam = await getFamilySummary(true);
+      const grid = document.getElementById('dashChildren');
+      if (fam.children && fam.children.length) {
+        grid.innerHTML = fam.children.map(c => {
+          const paidBadge = c.paid
+            ? '<span style="color:var(--gn);font-weight:bold">✓ Paid this month</span>'
+            : `<span style="color:var(--bgo);font-weight:bold">$${fam.monthly_rate.toFixed(2)} due</span>`;
+          const when = (c.class_day || c.class_time)
+            ? `${c.class_day || ''}${c.class_day && c.class_time ? ' at ' : ''}${c.class_time || ''}`
+            : 'No class scheduled';
+          return `
+            <div style="background:rgba(201,153,58,0.08);border:1px solid rgba(201,153,58,.28);border-radius:10px;padding:16px">
+              <div style="font-size:20px;color:var(--bgo);font-weight:bold;margin-bottom:8px">${c.name}</div>
+              <div style="font-size:15px;color:rgba(245,230,192,.8);margin-bottom:4px">📅 ${when}</div>
+              ${c.status !== 'active' ? `<div style="font-size:13px;color:rgba(245,230,192,.5);margin-bottom:4px">${c.status}</div>` : ''}
+              <div style="font-size:15px;margin-top:10px">${paidBadge}</div>
+            </div>`;
+        }).join('');
+      } else {
+        grid.innerHTML = '<div style="color:rgba(245,230,192,.5)">No dancers linked to this account yet.</div>';
+      }
+
+      const header = document.querySelector('#psec-dash .pgs');
+      if (header) {
+        header.textContent = fam.child_count > 1
+          ? `Overview for your ${fam.child_count} dancers`
+          : "Your student's overview";
+      }
+    } catch (e) {
+      console.error('Could not load children:', e);
+    }
+
     if (students.length > 0) {
       const student = students[0];
 
-      // Update dashboard with class info
-      const classSchedule = student.class_day && student.class_time
-        ? `📍 ${student.class_day} at ${student.class_time}`
-        : 'No class scheduled';
-      document.getElementById('dashClassSchedule').innerHTML = classSchedule;
+      // Full schedule across every child
+      const schedule = students.map(s =>
+        (s.class_day || s.class_time)
+          ? `📍 <strong>${s.name}</strong> — ${s.class_day || ''}${s.class_day && s.class_time ? ' at ' : ''}${s.class_time || ''}`
+          : `📍 <strong>${s.name}</strong> — no class scheduled`
+      ).join('<br>');
+      document.getElementById('dashClassSchedule').innerHTML = schedule || 'No class scheduled';
 
       // Calculate attendance metrics
       try {
@@ -1794,13 +1879,21 @@ async function loadParentData() {
         console.error('Error loading attendance:', e);
       }
 
-      // Load payment status
+      // Family-wide payment status (covers every child, not just the first)
       const payment = await API.request(`/payments/student/${student.id}/current-month`);
       let paymentStatus = 'Overdue';
-      if (payment.paid) {
-        paymentStatus = '✅ Paid';
-      } else if (!payment.is_overdue) {
-        paymentStatus = `Due in ${payment.days_until_due}d`;
+      try {
+        const fam = familySummary || await getFamilySummary();
+        if (fam.all_paid) {
+          paymentStatus = '✅ Paid';
+        } else if (fam.is_overdue) {
+          paymentStatus = `Overdue — $${fam.total_due.toFixed(2)}`;
+        } else {
+          paymentStatus = `$${fam.total_due.toFixed(2)} due in ${fam.days_until_due}d`;
+        }
+      } catch (e) {
+        if (payment.paid) paymentStatus = '✅ Paid';
+        else if (!payment.is_overdue) paymentStatus = `Due in ${payment.days_until_due}d`;
       }
       document.getElementById('dashPaymentStatus').textContent = paymentStatus;
 
@@ -1998,6 +2091,7 @@ function doLogout() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
     setTimeout(() => {
       window.location.href = '/login.html';
     }, 500);
@@ -2669,24 +2763,52 @@ async function viewParentAlbum(albumId) {
   }
 }
 
+// Read the signed-in user's email straight from the JWT payload.
+// (Auth.getUserEmail() was called here previously but never existed, so this
+// function threw a TypeError before it ever reached the fetch - which is why
+// the Send Message button appeared to do nothing at all.)
+function currentUserEmail() {
+  const stored = localStorage.getItem('userEmail');
+  if (stored) return stored;
+  try {
+    const token = localStorage.getItem('authToken');
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.email || payload.sub || null;
+  } catch (e) {
+    console.error('Could not read email from token:', e);
+    return null;
+  }
+}
+
 async function sendContactMessage() {
-  const name = document.getElementById('contactName').value;
-  const email = Auth.getUserEmail(); // Auto-filled from logged-in user
-  const subject = document.getElementById('contactSubject').value;
-  const message = document.getElementById('contactMessage').value;
+  const statusEl = document.getElementById('contactStatus');
+  const show = (msg, ok) => {
+    statusEl.innerHTML = ok
+      ? `<div style="background:rgba(76,175,138,0.2);border:1px solid var(--gn);border-radius:6px;padding:12px;color:var(--gn)">${msg}</div>`
+      : `<div style="background:rgba(217,83,79,0.15);border:1px solid #d9534f;border-radius:6px;padding:12px;color:#e8a09e">${msg}</div>`;
+  };
+
+  const name = document.getElementById('contactName').value.trim();
+  const subject = document.getElementById('contactSubject').value.trim();
+  const message = document.getElementById('contactMessage').value.trim();
+  const email = currentUserEmail();
 
   if (!name || !subject || !message) {
-    toast('All fields required', 'error');
+    show('Please fill in your name, a subject, and a message.', false);
+    return;
+  }
+  if (!email) {
+    show('Could not identify your account. Try signing out and back in.', false);
     return;
   }
 
+  show('Sending…', true);
+  showLoading();
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/contact/messages', {
+    const response = await fetch(`${API_BASE}/api/contact/messages`, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
-        'Content-Type': 'application/json'
-      },
+      headers: authHeaders(),
       body: JSON.stringify({
         parent_name: name,
         parent_email: email,
@@ -2695,14 +2817,20 @@ async function sendContactMessage() {
       })
     });
 
-    if (response.ok) {
-      document.getElementById('contactStatus').innerHTML = '<div style="background:rgba(76,175,138,0.2);border:1px solid var(--gn);border-radius:6px;padding:12px;color:var(--gn)">✓ Message sent!</div>';
-      document.getElementById('contactName').value = '';
-      document.getElementById('contactSubject').value = '';
-      document.getElementById('contactMessage').value = '';
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      show(body.error || `Could not send message (HTTP ${response.status})`, false);
+      return;
     }
+
+    show('✓ Message sent!', true);
+    document.getElementById('contactName').value = '';
+    document.getElementById('contactSubject').value = '';
+    document.getElementById('contactMessage').value = '';
   } catch (e) {
-    toast('Error sending message', 'error');
+    show('Connection error: ' + e.message, false);
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -2764,16 +2892,15 @@ async function loadClassStudents() {
 
 async function markAttendance(studentId, status, day, time) {
   try {
-    // First, find or create the class session
-    const response = await fetch('https://bharathashetra.onrender.com/api/attendance', {
+    // The server finds-or-creates the session for this class + date
+    const response = await fetch(`${API_BASE}/api/attendance`, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
-        'Content-Type': 'application/json'
-      },
+      headers: authHeaders(),
       body: JSON.stringify({
         student_id: studentId,
-        session_id: 1, // Placeholder - would need proper session management
+        class_day: day || null,
+        class_time: time || null,
+        date: new Date().toISOString().slice(0, 10),
         status: status
       })
     });
@@ -2856,7 +2983,7 @@ async function recordMonthlyPayment() {
       },
       body: JSON.stringify({
         student_id: selectedPaymentStudentId,
-        amount: 80,
+        amount: monthlyRate,
         payment_method: method,
         notes: notes
       })
@@ -3018,7 +3145,7 @@ async function quickMarkPaid(studentId) {
     const resp = await fetch(`${API_BASE}/api/payments/mark-paid`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ student_id: studentId, amount: 80, payment_method: 'cash', notes: 'Marked from payment roster' })
+      body: JSON.stringify({ student_id: studentId, amount: monthlyRate, payment_method: 'cash', notes: 'Marked from payment roster' })
     });
     if (!resp.ok) throw new Error((await resp.json().catch(()=>({}))).error || 'Failed');
     toast('Payment recorded', 'success');
@@ -3267,18 +3394,14 @@ async function markAttendance(studentId, status) {
   }
 
   try {
-    // Create consistent session ID from day+time (hashed)
-    const sessionId = 'class_' + day.toLowerCase() + '_' + (time || '').replace(/:/g,'').replace(/ /g,'');
-
-    const response = await fetch('https://bharathashetra.onrender.com/api/attendance', {
+    const response = await fetch(`${API_BASE}/api/attendance`, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
-        'Content-Type': 'application/json'
-      },
+      headers: authHeaders(),
       body: JSON.stringify({
         student_id: parseInt(studentId),
-        session_id: 1,  // Simplified: using ID 1 for now
+        class_day: day || null,
+        class_time: time || null,
+        date: new Date().toISOString().slice(0, 10),
         status: status
       })
     });
@@ -3551,74 +3674,106 @@ async function loadPaymentBalances() {
 }
 
 // ========================= PARENT PAYMENTS =========================
+const ZELLE_PHONE_DISPLAY = '(310) 371-2883';
+const ZELLE_PHONE_RAW = '3103712883';
+
+// Shared cache so the dashboard and payments tab agree
+let familySummary = null;
+
+async function getFamilySummary(force = false) {
+  if (familySummary && !force) return familySummary;
+  const resp = await fetch(`${API_BASE}/api/payments/family-summary`, { headers: authHeaders(false) });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  familySummary = await resp.json();
+  return familySummary;
+}
+
+// Renders the "PAY VIA ZELLE" panel. Heading and phone number are larger than
+// the buttons; the amount is the largest element in the block.
+function zelleBlock(amount, accent, tint, childCount, rate) {
+  const breakdown = childCount > 1
+    ? `<div style="font-size:15px;color:rgba(245,230,192,.6);margin-top:6px">${childCount} dancers × $${rate.toFixed(2)}</div>`
+    : '';
+  return `
+    <div style="background:${tint};padding:20px;border-radius:8px;border-left:3px solid ${accent}">
+      <div style="font-size:20px;color:rgba(245,230,192,.85);margin-bottom:12px;letter-spacing:1px;font-weight:600">💰 PAY VIA ZELLE</div>
+      <div style="margin-bottom:18px;font-size:26px;color:${accent};font-weight:bold;letter-spacing:.5px">${ZELLE_PHONE_DISPLAY}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <a href="https://www.zellepay.com" target="_blank" rel="noopener"
+           style="display:inline-block;background:${accent};color:var(--dk);padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:16px;letter-spacing:1px">Open Zelle</a>
+        <button onclick="copyToClipboard('${ZELLE_PHONE_RAW}')"
+           style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:12px 24px;border-radius:6px;font-family:'Raleway',sans-serif;font-size:16px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Copy Number</button>
+      </div>
+      <div style="margin-top:18px">
+        <span style="font-size:16px;color:rgba(245,230,192,.6)">Amount:</span>
+        <span style="font-size:34px;color:${accent};font-weight:bold;margin-left:8px">$${amount.toFixed(2)}</span>
+        ${breakdown}
+      </div>
+    </div>`;
+}
+
 async function loadParentPayments() {
   try {
-    const studentsResp = await fetch('https://bharathashetra.onrender.com/api/students', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
-    });
-    const students = await studentsResp.json();
-    if (students.length === 0) return;
+    const fam = await getFamilySummary(true);
+    if (!fam.children || fam.children.length === 0) {
+      document.getElementById('paymentCountdown').innerHTML =
+        '<div style="padding:15px;color:rgba(245,230,192,.6)">No students linked to this account yet.</div>';
+      return;
+    }
 
-    const studentId = students[0].id;
+    const rate = fam.monthly_rate;
+    const kids = fam.child_count;
+    const unpaid = fam.children.filter(c => !c.paid && c.status === 'active');
 
-    // Load current month status
-    const statusResp = await fetch(`https://bharathashetra.onrender.com/api/payments/student/${studentId}/current-month`, {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
-    });
-    const statusData = await statusResp.json();
+    // Per-child breakdown when there's more than one dancer
+    const perChild = kids > 1
+      ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(245,230,192,.15)">
+           ${fam.children.map(c => `
+             <div style="display:flex;justify-content:space-between;font-size:15px;padding:4px 0">
+               <span style="color:rgba(245,230,192,.8)">${c.name}</span>
+               <span style="color:${c.paid ? 'var(--gn)' : 'var(--bgo)'}">${c.paid ? '✓ Paid' : `$${rate.toFixed(2)} due`}</span>
+             </div>`).join('')}
+         </div>`
+      : '';
 
-    let statusHtml = '';
-    let zelleHtml = '';
+    let statusHtml = '', zelleHtml = '';
 
-    if (statusData.paid) {
+    if (fam.all_paid) {
+      const last = fam.children.map(c => c.payment_date).filter(Boolean).sort().pop();
       statusHtml = `
-        <div style="background:rgba(76,175,138,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--gn)">
-          <div style="font-size:12px;color:rgba(245,230,192,.6)">✓ PAYMENT RECEIVED</div>
-          <div style="font-size:18px;color:var(--gn);margin-top:5px;font-weight:bold">Balance Due: $0</div>
-          <div style="font-size:12px;color:rgba(245,230,192,.6);margin-top:5px">Paid on ${new Date(statusData.payment.payment_date).toLocaleDateString()}</div>
-        </div>
-      `;
-    } else if (statusData.is_overdue) {
+        <div style="background:rgba(76,175,138,0.1);padding:18px;border-radius:8px;border-left:3px solid var(--gn)">
+          <div style="font-size:16px;color:rgba(245,230,192,.7);letter-spacing:1px">✓ PAYMENT RECEIVED</div>
+          <div style="font-size:30px;color:var(--gn);margin-top:8px;font-weight:bold">Balance Due: $0</div>
+          ${last ? `<div style="font-size:15px;color:rgba(245,230,192,.6);margin-top:6px">Paid on ${new Date(last).toLocaleDateString()}</div>` : ''}
+          ${perChild}
+        </div>`;
+    } else if (fam.is_overdue) {
       statusHtml = `
-        <div style="background:rgba(212,96,96,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--rd)">
-          <div style="font-size:12px;color:rgba(245,230,192,.6)">⚠ PAYMENT OVERDUE</div>
-          <div style="font-size:18px;color:var(--rd);margin-top:5px;font-weight:bold">Balance Due: $50</div>
-          <div style="font-size:12px;color:var(--rd);margin-top:5px">${statusData.days_until_due} days late</div>
-        </div>
-      `;
-      zelleHtml = `
-        <div style="background:rgba(232,184,75,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--bgo)">
-          <div style="font-size:12px;color:rgba(245,230,192,.6);margin-bottom:10px">💰 PAY VIA ZELLE</div>
-          <div style="margin-bottom:12px;font-size:14px;color:var(--bgo);font-weight:bold">(310) 371-2883</div>
-          <a href="https://www.zellepay.com" target="_blank" style="display:inline-block;background:var(--bgo);color:var(--dk);padding:10px 20px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:12px;margin-right:8px">Open Zelle</a>
-          <button class="bgld" onclick="copyToClipboard('3103712883')" style="padding:10px 20px;font-size:12px">Copy Number</button>
-          <div style="font-size:11px;color:rgba(245,230,192,.5);margin-top:10px">Amount: <strong>$50</strong></div>
-        </div>
-      `;
+        <div style="background:rgba(212,96,96,0.1);padding:18px;border-radius:8px;border-left:3px solid var(--rd)">
+          <div style="font-size:16px;color:rgba(245,230,192,.7);letter-spacing:1px">⚠ PAYMENT OVERDUE</div>
+          <div style="font-size:30px;color:var(--rd);margin-top:8px;font-weight:bold">Balance Due: $${fam.total_due.toFixed(2)}</div>
+          <div style="font-size:15px;color:var(--rd);margin-top:6px">Past the 10th of the month</div>
+          ${perChild}
+        </div>`;
+      zelleHtml = zelleBlock(fam.total_due, 'var(--bgo)', 'rgba(232,184,75,0.1)', unpaid.length, rate);
     } else {
       statusHtml = `
-        <div style="background:rgba(232,184,75,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--bgo)">
-          <div style="font-size:12px;color:rgba(245,230,192,.6)">📅 PAYMENT DUE</div>
-          <div style="font-size:18px;color:var(--bgo);margin-top:5px;font-weight:bold">Balance Due: $50</div>
-          <div style="font-size:12px;color:rgba(245,230,192,.6);margin-top:5px">Due in ${statusData.days_until_due} days</div>
-        </div>
-      `;
-      zelleHtml = `
-        <div style="background:rgba(76,175,138,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--gn)">
-          <div style="font-size:12px;color:rgba(245,230,192,.6);margin-bottom:10px">💰 PAY VIA ZELLE</div>
-          <div style="margin-bottom:12px;font-size:14px;color:var(--gn);font-weight:bold">(310) 371-2883</div>
-          <a href="https://www.zellepay.com" target="_blank" style="display:inline-block;background:var(--gn);color:var(--cr2);padding:10px 20px;border-radius:5px;text-decoration:none;font-weight:bold;font-size:12px;margin-right:8px">Open Zelle</a>
-          <button class="bgld" onclick="copyToClipboard('3103712883')" style="padding:10px 20px;font-size:12px">Copy Number</button>
-          <div style="font-size:11px;color:rgba(245,230,192,.5);margin-top:10px">Amount: <strong>$50</strong></div>
-        </div>
-      `;
+        <div style="background:rgba(232,184,75,0.1);padding:18px;border-radius:8px;border-left:3px solid var(--bgo)">
+          <div style="font-size:16px;color:rgba(245,230,192,.7);letter-spacing:1px">📅 PAYMENT DUE</div>
+          <div style="font-size:30px;color:var(--bgo);margin-top:8px;font-weight:bold">Balance Due: $${fam.total_due.toFixed(2)}</div>
+          <div style="font-size:15px;color:rgba(245,230,192,.6);margin-top:6px">Due in ${fam.days_until_due} days</div>
+          ${perChild}
+        </div>`;
+      zelleHtml = zelleBlock(fam.total_due, 'var(--gn)', 'rgba(76,175,138,0.1)', unpaid.length, rate);
     }
-    document.getElementById('paymentCountdown').innerHTML = statusHtml;
-    document.getElementById('zelleLink').innerHTML = !statusData.paid ? zelleHtml : '';
 
-    // Load payment history
-    const historyResp = await fetch(`https://bharathashetra.onrender.com/api/payments/student/${studentId}`, {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+    document.getElementById('paymentCountdown').innerHTML = statusHtml;
+    document.getElementById('zelleLink').innerHTML = fam.all_paid ? '' : zelleHtml;
+
+    // History still shows the first child's records
+    const studentId = fam.children[0].id;
+    const historyResp = await fetch(`${API_BASE}/api/payments/student/${studentId}`, {
+      headers: authHeaders(false)
     });
     const historyData = await historyResp.json();
 
@@ -3712,6 +3867,7 @@ window.addEventListener('DOMContentLoaded', () => {
       // One students fetch warms the cache every other view reads from
       await safe(() => refreshStudents());
       await Promise.allSettled([
+        safe(() => loadMonthlyRate()),
         safe(() => loadAdminDashboard()),
         safe(() => filterStudents())
       ]);

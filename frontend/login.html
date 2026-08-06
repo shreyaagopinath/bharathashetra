@@ -315,6 +315,7 @@ document.getElementById('parentForm').addEventListener('submit', async (e) => {
     localStorage.setItem('authToken', data.access_token);
     localStorage.setItem('userId', data.user_id);
     localStorage.setItem('userRole', data.role);
+    localStorage.setItem('userEmail', data.email || email);
     window.location.href = '/index.html';
   } catch (error) {
     errEl.textContent = error.message;
@@ -342,6 +343,7 @@ document.getElementById('adminForm').addEventListener('submit', async (e) => {
     localStorage.setItem('authToken', data.access_token);
     localStorage.setItem('userId', data.user_id);
     localStorage.setItem('userRole', data.role);
+    localStorage.setItem('userEmail', data.email || email);
     window.location.href = '/index.html';
   } catch (error) {
     errEl.textContent = error.message;

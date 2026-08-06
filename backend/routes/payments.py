@@ -8,6 +8,52 @@ import json
 
 payments_bp = Blueprint('payments', __name__)
 
+DEFAULT_MONTHLY_RATE = 80.0
+
+
+def get_monthly_rate():
+    """Monthly tuition per child. Editable in admin Settings."""
+    setting = Setting.query.filter_by(key='monthly_rate').first()
+    if setting:
+        try:
+            return float(setting.value)
+        except (TypeError, ValueError):
+            pass
+    return DEFAULT_MONTHLY_RATE
+
+
+@payments_bp.route('/rate', methods=['GET'])
+@jwt_required()
+def get_rate():
+    """Current monthly rate per child (any signed-in user)."""
+    return jsonify({'monthly_rate': get_monthly_rate()}), 200
+
+
+@payments_bp.route('/rate', methods=['PUT'])
+@jwt_required()
+def set_rate():
+    """Admin updates the monthly rate per child."""
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    data = request.get_json() or {}
+    try:
+        rate = float(data.get('monthly_rate'))
+        if rate < 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({'error': 'monthly_rate must be a non-negative number'}), 400
+
+    setting = Setting.query.filter_by(key='monthly_rate').first()
+    if setting:
+        setting.value = str(rate)
+    else:
+        db.session.add(Setting(key='monthly_rate', value=str(rate)))
+
+    db.session.commit()
+    return jsonify({'message': 'Rate updated', 'monthly_rate': rate}), 200
+
 def calculate_late_fee(payment_date, month_paid_for):
     """Calculate if late fee applies"""
     # Parse month (format: "2024-10")
@@ -84,6 +130,71 @@ def get_all_payments():
         rows = [r for r in rows if r['status'] == status]
 
     return jsonify(rows), 200
+
+@payments_bp.route('/family-summary', methods=['GET'])
+@jwt_required()
+def family_summary():
+    """Every child under the signed-in parent, plus the combined monthly total.
+
+    One parent email can cover several siblings, so the amount owed is
+    rate x number of active children.
+    """
+    from datetime import date
+    from flask_jwt_extended import get_jwt
+
+    user = User.query.get(get_jwt_identity())
+    if not user:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    claims = get_jwt()
+    email = claims.get('email') or user.email
+
+    if user.role == 'admin' and request.args.get('email'):
+        email = request.args.get('email')   # admin can preview a family
+
+    students = Student.query.filter_by(parent_email=email).order_by(Student.name).all()
+    if not students:
+        students = Student.query.filter_by(email=email).order_by(Student.name).all()
+
+    today = date.today()
+    month = f"{today.year}-{today.month:02d}"
+    rate = get_monthly_rate()
+    PAID_STATES = ('paid', 'completed', 'success', 'succeeded')
+
+    children = []
+    unpaid_count = 0
+    for s in students:
+        p = Payment.query.filter_by(student_id=s.id, month_paid_for=month).first()
+        is_paid = bool(p and (p.status or '').lower() in PAID_STATES)
+        if not is_paid and (s.status or 'active') == 'active':
+            unpaid_count += 1
+        children.append({
+            'id': s.id,
+            'name': s.name,
+            'class_day': s.class_day,
+            'class_time': s.class_time,
+            'status': s.status or 'active',
+            'paid': is_paid,
+            'amount_due': 0 if is_paid else rate,
+            'amount_paid': (p.amount if p else 0) or 0,
+            'late_fee': (p.late_fee_applied if p else 0) or 0,
+            'payment_date': p.payment_date.isoformat() if (p and p.payment_date) else None,
+        })
+
+    active = [c for c in children if c['status'] == 'active']
+    return jsonify({
+        'parent_email': email,
+        'month': month,
+        'monthly_rate': rate,
+        'child_count': len(active),
+        'children': children,
+        'total_due': round(rate * unpaid_count, 2),
+        'total_monthly': round(rate * len(active), 2),
+        'all_paid': unpaid_count == 0,
+        'days_until_due': max(0, 10 - today.day),
+        'is_overdue': today.day > 10 and unpaid_count > 0,
+    }), 200
+
 
 @payments_bp.route('/student/<int:student_id>', methods=['GET'])
 @jwt_required()
