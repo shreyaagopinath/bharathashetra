@@ -1,49 +1,26 @@
 {
   "name": "Bharathashetra School of Dance",
   "short_name": "Bharathashetra",
-  "description": "Bharathashetra School of Dance — parent & admin portal for classes, payments, and attendance",
+  "description": "Bharathashetra School of Dance — parent portal for classes, payments, attendance, and photos",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#1A0A0A",
-  "theme_color": "#8B1A1A",
+  "theme_color": "#1A0A0A",
   "orientation": "portrait-primary",
   "icons": [
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%238B1A1A' width='192' height='192'/><text x='96' y='120' font-size='80' font-family='serif' font-weight='bold' fill='%23E8B84B' text-anchor='middle'>भ</text></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%238B1A1A' width='192' height='192'/><text x='96' y='120' font-size='80' font-family='serif' font-weight='bold' fill='%23E8B84B' text-anchor='middle'>भ</text></svg>",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%231A0A0A' width='540' height='720'/><text x='270' y='360' font-size='60' font-family='serif' fill='%23E8B84B' text-anchor='middle'>Bharathashetra</text></svg>",
-      "sizes": "540x720",
-      "type": "image/svg+xml",
-      "form_factor": "narrow"
-    }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "categories": ["education", "lifestyle"],
   "shortcuts": [
     {
-      "name": "Login",
-      "short_name": "Login",
-      "description": "Log in to Bharathashetra",
-      "url": "/login.html",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%238B1A1A' width='96' height='96'/><circle cx='48' cy='30' r='12' fill='%23E8B84B'/><path d='M 35 48 Q 35 42 41 42 L 55 42 Q 61 42 61 48 L 61 65 Q 61 71 55 71 L 41 71 Q 35 71 35 65 Z' fill='%23E8B84B'/></svg>",
-          "sizes": "96x96",
-          "type": "image/svg+xml"
-        }
-      ]
+      "name": "Payments",
+      "short_name": "Pay",
+      "description": "View what's due this month",
+      "url": "/index.html"
     }
   ]
 }

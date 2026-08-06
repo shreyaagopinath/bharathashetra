@@ -1,91 +1,94 @@
-const CACHE_NAME = 'bharathashetra-v2';
-const URLS_TO_CACHE = [
-  '/'
+// Bump this whenever the caching strategy changes - the activate handler
+// deletes every cache that doesn't match, which purges stale assets.
+const CACHE_NAME = 'bharathashetra-v3';
+
+// Only genuinely static, versioned-by-content assets belong here.
+const PRECACHE = [
+  '/icons/icon-192.png',
+  '/icons/apple-touch-icon.png',
+  '/manifest.json'
 ];
 
-// Install event - cache essential files
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(URLS_TO_CACHE).catch(err => {
-        console.log('Cache install error (non-critical):', err);
-        // Don't fail installation if some files can't be cached
-      });
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE))
+      .catch(err => console.log('Precache skipped (non-critical):', err))
   );
   self.skipWaiting();
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(names =>
+      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+    )
   );
   self.clients.claim();
 });
 
-// Fetch event - network first, fall back to cache
 self.addEventListener('fetch', event => {
   const { request } = event;
 
-  // Skip non-GET requests and API calls (let them handle themselves)
-  if (request.method !== 'GET') {
+  if (request.method !== 'GET') return;
+
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch (e) {
     return;
   }
 
-  // For API requests, try network first
-  if (request.url.includes('/api/')) {
+  // Never cache API traffic. These responses are authenticated and
+  // time-sensitive (payment status, attendance) - a stale hit would show a
+  // parent the wrong balance, and the entries would linger on shared devices.
+  if (url.pathname.startsWith('/api/')) return;
+
+  // App shell: always network-first so a deploy reaches parents immediately.
+  // This must cover "/" as well as *.html - the previous version only checked
+  // for ".html", so "/" was served cache-first and users could stay pinned to
+  // an old build indefinitely.
+  const isAppShell =
+    request.mode === 'navigate' ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('.html');
+
+  if (isAppShell) {
     event.respondWith(
       fetch(request)
         .then(response => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(c => c.put(request, responseClone));
-          }
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(request, copy)).catch(() => {});
           return response;
         })
-        .catch(() => {
-          // If offline, try to return cached version
-          return caches.match(request).then(cached => {
-            return cached || new Response('Offline - API unavailable', { status: 503 });
-          });
-        })
+        .catch(() =>
+          caches.match(request).then(
+            cached => cached || caches.match('/') ||
+              new Response(
+                '<h1 style="font-family:sans-serif;padding:2rem">You are offline</h1>' +
+                '<p style="font-family:sans-serif;padding:0 2rem">Reconnect to load the portal.</p>',
+                { status: 503, headers: { 'Content-Type': 'text/html' } }
+              )
+          )
+        )
     );
     return;
   }
 
-  // Skip caching HTML files (always fetch fresh)
-  if (request.url.includes('.html')) {
-    event.respondWith(fetch(request));
-    return;
-  }
-
-  // For other static files, use cache first strategy
+  // Static assets (icons, fonts, css/js): cache-first, refresh in background.
   event.respondWith(
     caches.match(request).then(cached => {
-      if (cached) return cached;
-
-      return fetch(request)
+      const network = fetch(request)
         .then(response => {
-          if (!response || response.status !== 200 || response.type === 'error') {
-            return response;
+          if (response && response.status === 200 && response.type !== 'error') {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(c => c.put(request, copy)).catch(() => {});
           }
-          // Clone and cache
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(c => c.put(request, responseClone));
           return response;
         })
-        .catch(() => {
-          return caches.match(request) || new Response('Offline', { status: 503 });
-        });
+        .catch(() => cached);
+
+      return cached || network;
     })
   );
 });
