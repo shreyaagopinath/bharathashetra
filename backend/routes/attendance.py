@@ -85,21 +85,41 @@ def get_student_attendance(student_id):
     if user.role not in ['admin', 'parent']:
         return jsonify({'error': 'Unauthorized'}), 403
 
+    student = Student.query.get(student_id)
+    if not student:
+        return jsonify({'error': 'Student not found'}), 404
+
     # Parents can only view their own child's attendance
     if user.role == 'parent':
-        student = Student.query.get(student_id)
-        if not student or student.parent_email != user.email:
+        if student.parent_email != user.email and student.email != user.email:
             return jsonify({'error': 'Unauthorized'}), 403
 
-    records = Attendance.query.filter_by(student_id=student_id).all()
+    records = (Attendance.query
+               .filter_by(student_id=student_id)
+               .order_by(Attendance.marked_at.desc())
+               .all())
+
+    # Include the session's class date so the parent view can show when the
+    # class actually happened, not just when the admin tapped the button.
+    session_dates = {}
+    session_ids = {a.session_id for a in records if a.session_id}
+    if session_ids:
+        for s in ClassSession.query.filter(ClassSession.id.in_(session_ids)).all():
+            session_dates[s.id] = s.session_date
 
     return jsonify({
         'student_id': student_id,
+        'student_name': student.name,
+        'class_day': student.class_day,
+        'class_time': student.class_time,
         'attendance': [{
             'id': a.id,
             'session_id': a.session_id,
             'status': a.status,
-            'marked_at': a.marked_at.isoformat()
+            'date': (session_dates.get(a.session_id).isoformat()
+                     if session_dates.get(a.session_id) else
+                     (a.marked_at.isoformat() if a.marked_at else None)),
+            'marked_at': a.marked_at.isoformat() if a.marked_at else None
         } for a in records]
     }), 200
 

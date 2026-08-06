@@ -580,7 +580,7 @@ button[style*="background:var(--am)"] {
 
     <div class="af">
       <div class="aft">Unread Messages</div>
-      <div id="dashMessages" style="font-size:13px;color:rgba(245,230,192,.6)">No new messages</div>
+      <div id="dashMessages" style="font-size:19px;font-weight:600;color:rgba(245,230,192,.75);padding:4px 0">No new messages</div>
     </div>
   </div>
 
@@ -993,12 +993,6 @@ button[style*="background:var(--am)"] {
         <div id="dashChildren" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px"></div>
       </div>
 
-      <!-- Class Schedule -->
-      <div class="af">
-        <div class="aft">📅 Your Class Schedule</div>
-        <div id="dashClassSchedule" style="color:rgba(245,230,192,.6);font-size:14px;padding:12px;background:rgba(201,153,58,0.08);border-radius:6px"></div>
-      </div>
-
       <!-- Announcements -->
       <div class="af">
         <div class="aft">📢 Latest Announcements</div>
@@ -1028,23 +1022,20 @@ button[style*="background:var(--am)"] {
         <div class="aft">Attendance Summary</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin:15px 0">
           <div style="background:rgba(76,175,138,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--gn)">
-            <div style="font-size:11px;color:rgba(245,230,192,.6);letter-spacing:1px">CLASSES ATTENDED</div>
+            <div style="font-size:13px;color:rgba(245,230,192,.6);letter-spacing:1px">CLASSES ATTENDED</div>
             <div id="attClasses" style="font-size:24px;color:var(--gn);margin-top:5px">0</div>
           </div>
           <div style="background:rgba(212,96,96,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--rd)">
-            <div style="font-size:11px;color:rgba(245,230,192,.6);letter-spacing:1px">CLASSES MISSED</div>
+            <div style="font-size:13px;color:rgba(245,230,192,.6);letter-spacing:1px">CLASSES MISSED</div>
             <div id="attMissed" style="font-size:24px;color:var(--rd);margin-top:5px">0</div>
           </div>
           <div style="background:rgba(232,184,75,0.1);padding:15px;border-radius:8px;border-left:3px solid var(--bgo)">
-            <div style="font-size:11px;color:rgba(245,230,192,.6);letter-spacing:1px">ATTENDANCE %</div>
+            <div style="font-size:13px;color:rgba(245,230,192,.6);letter-spacing:1px">ATTENDANCE %</div>
             <div id="attPercent" style="font-size:24px;color:var(--bgo);margin-top:5px">0%</div>
           </div>
         </div>
       </div>
-      <div class="tw">
-        <div class="th-row"><div class="th">Date</div><div class="th">Class</div><div class="th">Status</div></div>
-        <div id="parentAttendance"></div>
-      </div>
+      <div id="parentAttendance"></div>
     </div>
 
     <!-- Photos -->
@@ -1125,13 +1116,16 @@ button[style*="background:var(--am)"] {
     </div>
 
     <div style="margin-bottom:20px">
-      <div style="font-size:11px;color:rgba(245,230,192,0.5);letter-spacing:1px;margin-bottom:8px">MESSAGE</div>
-      <div id="modalMsgBody" style="font-size:14px;color:rgba(245,230,192,0.8);line-height:1.8;white-space:pre-wrap"></div>
+      <div style="font-size:13px;color:rgba(245,230,192,0.5);letter-spacing:1px;margin-bottom:8px">MESSAGE</div>
+      <div id="modalMsgBody" style="font-size:16px;color:rgba(245,230,192,0.85);line-height:1.8;white-space:pre-wrap"></div>
     </div>
 
-    <div style="border-top:1px solid rgba(201,153,58,0.2);padding-top:15px;display:flex;justify-content:space-between;align-items:center">
-      <div id="modalMsgDate" style="font-size:11px;color:rgba(245,230,192,0.4)"></div>
-      <button onclick="closeMessageModal()" style="background:rgba(201,153,58,0.2);border:1px solid rgba(201,153,58,0.5);color:var(--bgo);padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold">Close</button>
+    <div style="border-top:1px solid rgba(201,153,58,0.2);padding-top:15px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div id="modalMsgDate" style="font-size:13px;color:rgba(245,230,192,0.45)"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="deleteMessage(currentMessageId)" style="background:transparent;border:1px solid #d9534f;color:#d9534f;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:15px">Delete</button>
+        <button onclick="closeMessageModal()" style="background:rgba(201,153,58,0.2);border:1px solid rgba(201,153,58,0.5);color:var(--bgo);padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:bold;font-size:15px">Close</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1820,50 +1814,37 @@ async function loadParentData() {
     // Load student data
     const students = await API.getStudents();
 
-    // One card per child, with class day/time and this month's payment status
-    try {
-      const fam = await getFamilySummary(true);
-      const grid = document.getElementById('dashChildren');
-      if (fam.children && fam.children.length) {
-        grid.innerHTML = fam.children.map(c => {
-          const paidBadge = c.paid
-            ? '<span style="color:var(--gn);font-weight:bold">✓ Paid this month</span>'
-            : `<span style="color:var(--bgo);font-weight:bold">$${fam.monthly_rate.toFixed(2)} due</span>`;
-          const when = (c.class_day || c.class_time)
-            ? `${c.class_day || ''}${c.class_day && c.class_time ? ' at ' : ''}${c.class_time || ''}`
+    // One card per child showing name + class day/time.
+    // Built from the student list (already loaded and reliable) rather than
+    // depending on the family-summary call succeeding first.
+    const grid = document.getElementById('dashChildren');
+    if (grid) {
+      if (Array.isArray(students) && students.length) {
+        grid.innerHTML = students.map(s => {
+          const when = (s.class_day || s.class_time)
+            ? `${s.class_day || ''}${s.class_day && s.class_time ? ' at ' : ''}${s.class_time || ''}`
             : 'No class scheduled';
           return `
             <div style="background:rgba(201,153,58,0.08);border:1px solid rgba(201,153,58,.28);border-radius:10px;padding:16px">
-              <div style="font-size:20px;color:var(--bgo);font-weight:bold;margin-bottom:8px">${c.name}</div>
-              <div style="font-size:15px;color:rgba(245,230,192,.8);margin-bottom:4px">📅 ${when}</div>
-              ${c.status !== 'active' ? `<div style="font-size:13px;color:rgba(245,230,192,.5);margin-bottom:4px">${c.status}</div>` : ''}
-              <div style="font-size:15px;margin-top:10px">${paidBadge}</div>
+              <div style="font-size:20px;color:var(--bgo);font-weight:bold;margin-bottom:8px">${s.name}</div>
+              <div style="font-size:15px;color:rgba(245,230,192,.8)">📅 ${when}</div>
+              ${(s.status && s.status !== 'active') ? `<div style="font-size:13px;color:rgba(245,230,192,.5);margin-top:6px">${s.status}</div>` : ''}
             </div>`;
         }).join('');
       } else {
         grid.innerHTML = '<div style="color:rgba(245,230,192,.5)">No dancers linked to this account yet.</div>';
       }
+    }
 
-      const header = document.querySelector('#psec-dash .pgs');
-      if (header) {
-        header.textContent = fam.child_count > 1
-          ? `Overview for your ${fam.child_count} dancers`
-          : "Your student's overview";
-      }
-    } catch (e) {
-      console.error('Could not load children:', e);
+    const header = document.querySelector('#psec-dash .pgs');
+    if (header && Array.isArray(students)) {
+      header.textContent = students.length > 1
+        ? `Overview for your ${students.length} dancers`
+        : "Your student's overview";
     }
 
     if (students.length > 0) {
       const student = students[0];
-
-      // Full schedule across every child
-      const schedule = students.map(s =>
-        (s.class_day || s.class_time)
-          ? `📍 <strong>${s.name}</strong> — ${s.class_day || ''}${s.class_day && s.class_time ? ' at ' : ''}${s.class_time || ''}`
-          : `📍 <strong>${s.name}</strong> — no class scheduled`
-      ).join('<br>');
-      document.getElementById('dashClassSchedule').innerHTML = schedule || 'No class scheduled';
 
       // Calculate attendance metrics
       try {
@@ -2158,8 +2139,11 @@ async function loadAdminDashboard() {
     if (msgResp.ok) {
       const messages = await msgResp.json();
       const unreadCount = messages.filter(m => !m.is_read).length;
-      if (unreadCount > 0) {
-        document.getElementById('dashMessages').innerHTML = `<strong>${unreadCount} new message${unreadCount > 1 ? 's' : ''}</strong>`;
+      const el = document.getElementById('dashMessages');
+      if (el) {
+        el.innerHTML = unreadCount > 0
+          ? `<span style="color:var(--bgo)">● ${unreadCount} new message${unreadCount === 1 ? '' : 's'}</span>`
+          : '<span style="color:rgba(245,230,192,.55)">No new messages</span>';
       }
     }
   } catch (e) {
@@ -2544,31 +2528,49 @@ document.addEventListener('keydown', (e) => {
 
 async function loadMessages() {
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/contact/messages', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
-    });
+    const response = await fetch(`${API_BASE}/api/contact/messages`, { headers: authHeaders(false) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const messages = await response.json();
 
-    let html = '';
-    messages.forEach(msg => {
-      const status = msg.is_read ? '✓ Read' : '● Unread';
-      html += `
-        <div class="tr">
-          <div class="ctm">${msg.parent_name}</div>
-          <div class="ctm">${msg.subject}</div>
-          <div class="ctm">${new Date(msg.created_at).toLocaleDateString()}</div>
-          <div class="ctm">${status}</div>
-          <div class="ctm" style="display:flex;gap:5px">
-            <button class="bgld" style="padding:5px 10px;font-size:9px" onclick="viewMessage(${msg.id})">View</button>
-            <button style="padding:5px 10px;font-size:9px;background:transparent;border:1px solid rgba(212,164,55,0.5);color:var(--am);border-radius:6px;cursor:pointer;font-family:'Raleway',sans-serif;font-weight:500;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;opacity:0.8" onclick="markMessageRead(${msg.id},${msg.is_read ? 0 : 1})">${msg.is_read ? 'Unread' : 'Read'}</button>
-            <button style="padding:5px 10px;font-size:9px;background:transparent;border:1px solid rgba(168,60,60,0.5);color:var(--rd);border-radius:6px;cursor:pointer;font-family:'Raleway',sans-serif;font-weight:500;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;opacity:0.8" onclick="deleteMessage(${msg.id})">Delete</button>
+    const unread = messages.filter(m => !m.is_read).length;
+    const banner = `
+      <div style="padding:12px 14px;margin-bottom:12px;border-radius:6px;font-size:17px;font-weight:600;
+                  background:${unread ? 'rgba(201,153,58,.12)' : 'rgba(76,175,138,.10)'};
+                  border:1px solid ${unread ? 'rgba(201,153,58,.45)' : 'rgba(76,175,138,.35)'};
+                  color:${unread ? 'var(--bgo)' : 'var(--gn)'}">
+        ${unread ? `● ${unread} unread message${unread === 1 ? '' : 's'}` : '✓ All messages read'}
+        <span style="font-size:15px;font-weight:400;color:rgba(245,230,192,.55);margin-left:8px">
+          ${messages.length} total
+        </span>
+      </div>`;
+
+    const btn = (label, color, handler) =>
+      `<button style="padding:7px 14px;font-size:14px;background:transparent;border:1px solid ${color};color:${color};border-radius:6px;cursor:pointer;font-family:'Raleway',sans-serif;font-weight:600;letter-spacing:.5px" onclick="${handler}">${label}</button>`;
+
+    const rows = messages.map(msg => {
+      const status = msg.is_read
+        ? '<span style="color:rgba(245,230,192,.55)">✓ Read</span>'
+        : '<span style="color:var(--bgo);font-weight:bold">● Unread</span>';
+      return `
+        <div class="tr" style="${msg.is_read ? '' : 'background:rgba(201,153,58,.05);'}">
+          <div class="ctm" style="font-size:16px;${msg.is_read ? '' : 'font-weight:bold'}">${msg.parent_name}</div>
+          <div class="ctm" style="font-size:16px">${msg.subject}</div>
+          <div class="ctm" style="font-size:15px">${new Date(msg.created_at).toLocaleDateString()}</div>
+          <div class="ctm" style="font-size:15px">${status}</div>
+          <div class="ctm" style="display:flex;gap:6px;flex-wrap:wrap">
+            ${btn('View', 'var(--bgo)', `viewMessage(${msg.id})`)}
+            ${btn(msg.is_read ? 'Unread' : 'Read', 'var(--am)', `markMessageRead(${msg.id},${msg.is_read ? 0 : 1})`)}
+            ${btn('Delete', '#d9534f', `deleteMessage(${msg.id})`)}
           </div>
-        </div>
-      `;
-    });
-    document.getElementById('messagesList').innerHTML = html || '<div class="tr"><div class="ctm">No messages</div></div>';
+        </div>`;
+    }).join('');
+
+    document.getElementById('messagesList').innerHTML =
+      banner + (rows || '<div class="tr"><div class="ctm" style="font-size:16px">No messages</div></div>');
   } catch (e) {
     console.error('Error:', e);
+    document.getElementById('messagesList').innerHTML =
+      '<div class="tr"><div class="ctm" style="color:#d9534f;font-size:16px">Could not load messages.</div></div>';
   }
 }
 
@@ -2619,18 +2621,25 @@ async function markMessageRead(msgId, isRead) {
 }
 
 async function deleteMessage(msgId) {
-  if (!confirm('Delete this message?')) return;
+  if (!confirm('Delete this message permanently?')) return;
+  showLoading();
   try {
-    const response = await fetch(`https://bharathashetra.onrender.com/api/contact/messages/${msgId}`, {
+    const response = await fetch(`${API_BASE}/api/contact/messages/${msgId}`, {
       method: 'DELETE',
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
+      headers: authHeaders(false)
     });
-    if (response.ok) {
-      toast('Message deleted', 'success');
-      loadMessages();
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(body.error || `HTTP ${response.status}`);
     }
+    toast('Message deleted', 'success');
+    // If the modal is showing this message, close it
+    if (currentMessageId === msgId) closeMessageModal();
+    await loadMessages();
   } catch (e) {
-    toast('Error deleting message', 'error');
+    toast('Could not delete message: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
   }
 }
 
@@ -3467,49 +3476,87 @@ async function filterStudents() {
 // ========================= PARENT ATTENDANCE =========================
 async function loadParentAttendance() {
   try {
-    const studentsResp = await fetch('https://bharathashetra.onrender.com/api/students', {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
-    });
-    const students = await studentsResp.json();
-    if (students.length === 0) return;
-
-    const studentId = students[0].id;
-    const response = await fetch(`https://bharathashetra.onrender.com/api/attendance/student/${studentId}`, {
-      headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
-    });
-    const data = await response.json();
-
-    const records = data.attendance || [];
-    const present = records.filter(r => r.status === 'present').length;
-    const absent = records.filter(r => r.status === 'absent').length;
-    const total = present + absent;
-    const percent = total > 0 ? Math.round((present / total) * 100) : 0;
-
-    document.getElementById('attClasses').textContent = present;
-    document.getElementById('attMissed').textContent = absent;
-    document.getElementById('attPercent').textContent = percent + '%';
-
-    let html = '';
-    if (records.length > 0) {
-      records.slice(0, 10).forEach(r => {
-        const date = new Date(r.marked_at).toLocaleDateString();
-        const statusText = r.status === 'present' ? '✓ Present' : '✗ Absent';
-        const statusColor = r.status === 'present' ? 'var(--gn)' : 'var(--rd)';
-        html += `
-          <div class="tr">
-            <div class="ctm">${date}</div>
-            <div class="ctm">Class</div>
-            <div class="ctm" style="color:${statusColor}">${statusText}</div>
-          </div>
-        `;
-      });
-    } else {
-      html = '<div class="tr"><div class="ctm">No attendance records yet</div></div>';
+    const students = await getStudents();
+    if (!students.length) {
+      document.getElementById('parentAttendance').innerHTML =
+        '<div style="padding:15px;color:rgba(245,230,192,.6)">No students linked to this account.</div>';
+      return;
     }
+
+    // Fetch every child's record in parallel, then render one block each
+    const perStudent = await Promise.all(students.map(async s => {
+      try {
+        const r = await fetch(`${API_BASE}/api/attendance/student/${s.id}`, { headers: authHeaders(false) });
+        const d = r.ok ? await r.json() : {};
+        return { student: s, records: d.attendance || [] };
+      } catch (e) {
+        console.error(`Attendance failed for ${s.name}:`, e);
+        return { student: s, records: [], error: true };
+      }
+    }));
+
+    // Combined totals across all children for the summary cards
+    let allPresent = 0, allAbsent = 0;
+    perStudent.forEach(({ records }) => {
+      allPresent += records.filter(r => r.status === 'present').length;
+      allAbsent += records.filter(r => r.status === 'absent' || r.status === 'excused').length;
+    });
+    const allTotal = allPresent + allAbsent;
+    document.getElementById('attClasses').textContent = allPresent;
+    document.getElementById('attMissed').textContent = allAbsent;
+    document.getElementById('attPercent').textContent =
+      (allTotal > 0 ? Math.round((allPresent / allTotal) * 100) : 0) + '%';
+
+    const html = perStudent.map(({ student, records, error }) => {
+      const present = records.filter(r => r.status === 'present').length;
+      const absent = records.filter(r => r.status === 'absent' || r.status === 'excused').length;
+      const total = present + absent;
+      const pct = total > 0 ? Math.round((present / total) * 100) : 0;
+
+      const when = (student.class_day || student.class_time)
+        ? `${student.class_day || ''}${student.class_day && student.class_time ? ' at ' : ''}${student.class_time || ''}`
+        : 'No class scheduled';
+
+      // Newest first, by the class date
+      const sorted = records.slice().sort((a, b) =>
+        new Date(b.date || b.marked_at || 0) - new Date(a.date || a.marked_at || 0));
+
+      const rows = sorted.length
+        ? sorted.slice(0, 15).map(r => {
+            const raw = r.date || r.marked_at;
+            const date = raw ? new Date(raw).toLocaleDateString() : '—';
+            const isPresent = r.status === 'present';
+            const label = isPresent ? '✓ Present' : (r.status === 'excused' ? '~ Excused' : '✗ Absent');
+            const color = isPresent ? 'var(--gn)' : 'var(--rd)';
+            return `<div class="tr" style="grid-template-columns:1fr 1fr 1fr">
+                      <div class="ctm">${date}</div>
+                      <div class="ctm">${when}</div>
+                      <div class="ctm" style="color:${color};font-weight:bold">${label}</div>
+                    </div>`;
+          }).join('')
+        : `<div class="tr"><div class="ctm">${error ? 'Could not load records' : 'No attendance records yet'}</div></div>`;
+
+      return `
+        <div class="af" style="margin-bottom:18px">
+          <div class="aft">${student.name}</div>
+          <div style="font-size:14px;color:rgba(245,230,192,.6);margin:4px 0 12px">📅 ${when}</div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px;font-size:15px">
+            <span style="color:var(--gn)"><strong>${present}</strong> attended</span>
+            <span style="color:var(--rd)"><strong>${absent}</strong> missed</span>
+            <span style="color:var(--bgo)"><strong>${pct}%</strong> rate</span>
+          </div>
+          <div class="tw">
+            <div class="th-row" style="grid-template-columns:1fr 1fr 1fr"><div class="th">Date</div><div class="th">Class</div><div class="th">Status</div></div>
+            ${rows}
+          </div>
+        </div>`;
+    }).join('');
 
     document.getElementById('parentAttendance').innerHTML = html;
   } catch (e) {
     console.error('Error:', e);
+    document.getElementById('parentAttendance').innerHTML =
+      '<div style="padding:15px;color:#d9534f">Could not load attendance.</div>';
   }
 }
 
@@ -3702,11 +3749,11 @@ function zelleBlock(amount, accent, tint, childCount, rate) {
         <a href="https://www.zellepay.com" target="_blank" rel="noopener"
            style="display:inline-block;background:${accent};color:var(--dk);padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:16px;letter-spacing:1px">Open Zelle</a>
         <button onclick="copyToClipboard('${ZELLE_PHONE_RAW}')"
-           style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:12px 24px;border-radius:6px;font-family:'Raleway',sans-serif;font-size:16px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer">Copy Number</button>
+           style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:12px 24px;border-radius:6px;font-family:inherit;font-size:16px;font-weight:bold;letter-spacing:normal;text-transform:none;cursor:pointer;line-height:normal">Copy Number</button>
       </div>
       <div style="margin-top:18px">
         <span style="font-size:16px;color:rgba(245,230,192,.6)">Amount:</span>
-        <span style="font-size:34px;color:${accent};font-weight:bold;margin-left:8px">$${amount.toFixed(2)}</span>
+        <span style="font-size:16px;color:${accent};font-weight:bold;margin-left:8px">$${amount.toFixed(2)}</span>
         ${breakdown}
       </div>
     </div>`;
