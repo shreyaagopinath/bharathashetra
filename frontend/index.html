@@ -461,41 +461,11 @@ button[style*="background:var(--am)"] {
   display: block;
 }
 
-#parentNav {
-  display: flex;
-  flex-wrap: wrap;
-  background: rgba(0, 0, 0, 0.4);
-  border-bottom: 1px solid var(--br2);
-}
-
-#parentNav button {
-  flex: 1 1 auto;
-  padding: 9px 10px;
-  font-family: 'Raleway', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: rgba(245, 230, 192, 0.45);
-  cursor: pointer;
-  border: none;
-  background: none;
-  border-bottom: 2px solid transparent;
-  transition: all 0.3s;
-  white-space: nowrap;
-  text-align: center;
-  min-width: 0;
-}
-
-#parentNav button:hover {
-  color: var(--bgo);
-}
-
-#parentNav button.active {
-  color: var(--bgo);
-  border-bottom-color: var(--bgo);
-  background: rgba(201, 153, 58, 0.07);
-}
+/* #parentNav intentionally has no styles of its own.
+   The element carries class="anav", so it inherits the admin nav styling and
+   the two navs can never drift apart again. (There used to be a duplicate
+   #parentNav button block here whose higher ID specificity pinned the parent
+   tabs at the old 10px while the admin tabs were bumped to 14px.) */
 
 @media (max-width: 680px) {
   .htop { padding: 9px 13px; }
@@ -785,7 +755,7 @@ button[style*="background:var(--am)"] {
         <div class="fg"><label class="fl">Parent Login PIN</label><input class="fi" id="regPin" maxlength="4" inputmode="numeric" placeholder="Defaults to last 4 digits of phone"></div>
         <div></div>
       </div>
-      <div style="font-size:13px;color:rgba(245,230,192,.5);margin:-4px 0 12px">Parents sign in with their email + this 4-digit PIN.</div>
+      <div style="font-size:11px;color:rgba(245,230,192,.5);margin:-4px 0 12px">Parents sign in with their email + this 4-digit PIN.</div>
       <button class="bgld" onclick="registerStudent()">Register</button>
     </div>
     <div class="tw">
@@ -1348,7 +1318,7 @@ async function loadStudents() {
         <div class="td">${s.phone || '-'}</div>
         <div class="td">${s.class_day || '-'}</div>
         <div class="td">${s.class_time || '-'}</div>
-        <div class="td">${s.parent_pin ? `<code style="color:var(--bgo)">${s.parent_pin}</code>` : '<span style="color:#d9534f">none</span>'}</div>
+        <div class="td">${s.parent_pin ? `<code style="color:var(--bgo);font-size:12px;letter-spacing:.5px">${s.parent_pin}</code>` : '<span style="color:#d9534f;font-size:12px">none</span>'}</div>
         <div class="td">${s.status || 'active'}</div>
         <div class="td">
           <button onclick="editStudent(${s.id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:4px 8px;cursor:pointer;font-size:12px;margin-right:4px;border-radius:4px;">Edit</button>
@@ -1825,9 +1795,9 @@ async function loadParentData() {
             ? `${s.class_day || ''}${s.class_day && s.class_time ? ' at ' : ''}${s.class_time || ''}`
             : 'No class scheduled';
           return `
-            <div style="background:rgba(201,153,58,0.08);border:1px solid rgba(201,153,58,.28);border-radius:10px;padding:16px">
-              <div style="font-size:20px;color:var(--bgo);font-weight:bold;margin-bottom:8px">${s.name}</div>
-              <div style="font-size:15px;color:rgba(245,230,192,.8)">📅 ${when}</div>
+            <div class="announce-card" style="margin-bottom:0">
+              <div class="announce-title" style="font-size:20px">${s.name}</div>
+              <div class="announce-text">📅 ${when}</div>
               ${(s.status && s.status !== 'active') ? `<div style="font-size:13px;color:rgba(245,230,192,.5);margin-top:6px">${s.status}</div>` : ''}
             </div>`;
         }).join('');
@@ -3537,7 +3507,7 @@ async function loadParentAttendance() {
         : `<div class="tr"><div class="ctm">${error ? 'Could not load records' : 'No attendance records yet'}</div></div>`;
 
       return `
-        <div class="af" style="margin-bottom:18px">
+        <div class="af" style="margin:0">
           <div class="aft">${student.name}</div>
           <div style="font-size:14px;color:rgba(245,230,192,.6);margin:4px 0 12px">📅 ${when}</div>
           <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:12px;font-size:15px">
@@ -3552,9 +3522,13 @@ async function loadParentAttendance() {
         </div>`;
     }).join('');
 
+    // Side-by-side columns, one per dancer (stacks on narrow screens)
     document.getElementById('parentAttendance').innerHTML = html;
+    document.getElementById('parentAttendance').style.cssText =
+      'display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start';
   } catch (e) {
     console.error('Error:', e);
+    document.getElementById('parentAttendance').style.cssText = '';
     document.getElementById('parentAttendance').innerHTML =
       '<div style="padding:15px;color:#d9534f">Could not load attendance.</div>';
   }
