@@ -286,7 +286,8 @@ body::before {
 </div>
 
 <script>
-const API_BASE = 'https://bharathashetra.onrender.com/api';
+// Same-origin so a custom domain works without a code change
+const API_BASE = (localStorage.getItem('apiUrl') || (window.location.origin + '/api')).replace(/\/+$/, '');
 
 // Check if already logged in
 if (localStorage.getItem('authToken')) {

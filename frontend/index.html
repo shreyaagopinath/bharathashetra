@@ -1111,8 +1111,13 @@ button[style*="background:var(--am)"] {
 <script src="js/api.js"></script>
 
 <script>
-// Base URL for all direct fetch calls (no trailing /api)
-const API_BASE = (localStorage.getItem('apiUrl') || 'https://bharathashetra.onrender.com/api').replace(/\/api\/?$/, '');
+// Base URL for all direct fetch calls (no trailing /api).
+// Derived from the page's own origin so a custom domain needs no redeploy;
+// see resolveApiBase() in js/config.js.
+const API_BASE = (typeof API_CONFIG !== 'undefined' && API_CONFIG.baseURL
+  ? API_CONFIG.baseURL
+  : (localStorage.getItem('apiUrl') || window.location.origin + '/api')
+).replace(/\/api\/?$/, '');
 
 function authHeaders(json = true) {
   const h = { 'Authorization': 'Bearer ' + localStorage.getItem('authToken') };
@@ -1505,7 +1510,7 @@ function createAnnouncement() {
   }
 
   showLoading();
-  fetch('https://bharathashetra.onrender.com/api/announcements', {
+  fetch(`${API_BASE}/api/announcements`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1547,7 +1552,7 @@ function importCSVFile() {
     formData.append('file', file);
 
     // Send file to backend
-    fetch('https://bharathashetra.onrender.com/api/students/import-csv', {
+    fetch(`${API_BASE}/api/students/import-csv`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
@@ -2083,7 +2088,7 @@ function deleteAnnouncement(id) {
 // ========================= ADMIN DASHBOARD =========================
 async function loadAdminDashboard() {
   try {
-    const studentsResp = await fetch('https://bharathashetra.onrender.com/api/students', {
+    const studentsResp = await fetch(`${API_BASE}/api/students`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const students = await studentsResp.json();
@@ -2095,7 +2100,7 @@ async function loadAdminDashboard() {
     let unpaidCount = 0;
 
     for (const student of students) {
-      const payResp = await fetch(`https://bharathashetra.onrender.com/api/payments/student/${student.id}/current-month`, {
+      const payResp = await fetch(`${API_BASE}/api/payments/student/${student.id}/current-month`, {
         headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
       });
       const payData = await payResp.json();
@@ -2109,7 +2114,7 @@ async function loadAdminDashboard() {
     document.getElementById('dashTotalCollected').textContent = '$' + totalCollected;
     document.getElementById('dashUnpaid').textContent = unpaidCount;
 
-    const msgResp = await fetch('https://bharathashetra.onrender.com/api/contact/messages', {
+    const msgResp = await fetch(`${API_BASE}/api/contact/messages`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     if (msgResp.ok) {
@@ -2133,7 +2138,7 @@ let currentPhotoIndex = 0;
 
 async function loadAlbums() {
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/photos/albums', {
+    const response = await fetch(`${API_BASE}/api/photos/albums`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const albums = await response.json();
@@ -2172,7 +2177,7 @@ async function loadAlbums() {
 async function loadAlbumThumbnail(albumId) {
   try {
     // First get the metadata (photo IDs only)
-    const metaResp = await fetch(`https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos`, {
+    const metaResp = await fetch(`${API_BASE}/api/photos/albums/${albumId}/photos`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
 
@@ -2189,7 +2194,7 @@ async function loadAlbumThumbnail(albumId) {
     // Now fetch just the first photo's full data for thumbnail
     const firstPhotoId = metaData.photos[0].id;
     const photoResp = await fetch(
-      `https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos/${firstPhotoId}`,
+      `${API_BASE}/api/photos/albums/${albumId}/photos/${firstPhotoId}`,
       {headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}}
     );
 
@@ -2218,7 +2223,7 @@ async function createAlbum() {
   }
 
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/photos/albums', {
+    const response = await fetch(`${API_BASE}/api/photos/albums`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
@@ -2244,7 +2249,7 @@ async function createAlbum() {
 async function deleteAlbum(albumId) {
   if (!confirm('Delete this album?')) return;
   try {
-    await fetch(`https://bharathashetra.onrender.com/api/photos/albums/${albumId}`, {
+    await fetch(`${API_BASE}/api/photos/albums/${albumId}`, {
       method: 'DELETE',
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
@@ -2391,7 +2396,7 @@ async function editAlbum(albumId, title) {
     console.log('Loading album photos for ID:', albumId);
 
     // Get metadata (photo IDs only)
-    const response = await fetch(`https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos`, {
+    const response = await fetch(`${API_BASE}/api/photos/albums/${albumId}/photos`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
 
@@ -2413,7 +2418,7 @@ async function editAlbum(albumId, title) {
     for (const meta of photoMetadata) {
       try {
         const photoResp = await fetch(
-          `https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos/${meta.id}`,
+          `${API_BASE}/api/photos/albums/${albumId}/photos/${meta.id}`,
           {headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}}
         );
 
@@ -2554,7 +2559,7 @@ let currentMessageId = null;
 
 function viewMessage(msgId) {
   // Fetch and display the full message in modal
-  fetch(`https://bharathashetra.onrender.com/api/contact/messages`, {
+  fetch(`${API_BASE}/api/contact/messages`, {
     headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
   })
   .then(r => r.json())
@@ -2579,7 +2584,7 @@ function closeMessageModal() {
 
 async function markMessageRead(msgId, isRead) {
   try {
-    const response = await fetch(`https://bharathashetra.onrender.com/api/contact/messages/${msgId}`, {
+    const response = await fetch(`${API_BASE}/api/contact/messages/${msgId}`, {
       method: 'PATCH',
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
@@ -2621,7 +2626,7 @@ async function deleteMessage(msgId) {
 
 async function loadParentAlbums() {
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/photos/albums', {
+    const response = await fetch(`${API_BASE}/api/photos/albums`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const albums = await response.json();
@@ -2656,7 +2661,7 @@ async function loadParentAlbums() {
 
 async function loadParentAlbumThumbnail(albumId) {
   try {
-    const metaResp = await fetch(`https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos`, {
+    const metaResp = await fetch(`${API_BASE}/api/photos/albums/${albumId}/photos`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     if (!metaResp.ok) return;
@@ -2666,7 +2671,7 @@ async function loadParentAlbumThumbnail(albumId) {
 
     const firstPhotoId = metaData.photos[0].id;
     const photoResp = await fetch(
-      `https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos/${firstPhotoId}`,
+      `${API_BASE}/api/photos/albums/${albumId}/photos/${firstPhotoId}`,
       {headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}}
     );
     if (!photoResp.ok) return;
@@ -2687,7 +2692,7 @@ async function viewParentAlbum(albumId) {
   try {
     console.log('🔍 Loading parent album photos for ID:', albumId);
 
-    const response = await fetch(`https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos`, {
+    const response = await fetch(`${API_BASE}/api/photos/albums/${albumId}/photos`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
 
@@ -2716,7 +2721,7 @@ async function viewParentAlbum(albumId) {
       try {
         console.log('⬇️ Fetching photo', meta.id);
         const photoResp = await fetch(
-          `https://bharathashetra.onrender.com/api/photos/albums/${albumId}/photos/${meta.id}`,
+          `${API_BASE}/api/photos/albums/${albumId}/photos/${meta.id}`,
           {headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}}
         );
         console.log('📷 Photo', meta.id, 'status:', photoResp.status);
@@ -2841,7 +2846,7 @@ async function loadClassStudents() {
   }
 
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/students', {
+    const response = await fetch(`${API_BASE}/api/students`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const students = await response.json();
@@ -2960,7 +2965,7 @@ async function recordMonthlyPayment() {
   const notes = document.getElementById('payNotes').value;
 
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/payments/mark-paid', {
+    const response = await fetch(`${API_BASE}/api/payments/mark-paid`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
@@ -3158,7 +3163,7 @@ async function recordRecitalPayment() {
   const notes = document.getElementById('recitalNotes').value;
 
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/payments/mark-paid', {
+    const response = await fetch(`${API_BASE}/api/payments/mark-paid`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
@@ -3204,7 +3209,7 @@ async function markPaymentPaid(directStudentId) {
   }
 
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/payments/mark-paid', {
+    const response = await fetch(`${API_BASE}/api/payments/mark-paid`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
@@ -3243,7 +3248,7 @@ async function updatePaymentStatus() {
   }
 
   try {
-    const response = await fetch(`https://bharathashetra.onrender.com/api/payments/student/${studentId}/current-month`, {
+    const response = await fetch(`${API_BASE}/api/payments/student/${studentId}/current-month`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const data = await response.json();
@@ -3264,14 +3269,14 @@ async function updatePaymentStatus() {
 
 async function loadRecentPayments() {
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/students', {
+    const response = await fetch(`${API_BASE}/api/students`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const students = await response.json();
 
     let allPayments = [];
     for (const student of students) {
-      const payResp = await fetch(`https://bharathashetra.onrender.com/api/payments/student/${student.id}`, {
+      const payResp = await fetch(`${API_BASE}/api/payments/student/${student.id}`, {
         headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
       });
       const payData = await payResp.json();
@@ -3335,7 +3340,7 @@ async function loadClassStudents() {
   }
 
   try {
-    let url = `https://bharathashetra.onrender.com/api/students?class_day=${encodeURIComponent(day)}`;
+    let url = `${API_BASE}/api/students?class_day=${encodeURIComponent(day)}`;
     if (time) url += `&class_time=${encodeURIComponent(time)}`;
 
     const response = await fetch(url, {
@@ -3413,7 +3418,7 @@ async function filterStudents() {
   const name = document.getElementById('filterName').value;
 
   try {
-    let url = 'https://bharathashetra.onrender.com/api/students';
+    let url = `${API_BASE}/api/students`;
     const params = [];
     if (day) params.push(`class_day=${encodeURIComponent(day)}`);
     if (time) params.push(`class_time=${encodeURIComponent(time)}`);
@@ -3546,7 +3551,7 @@ async function filterPaymentHistory() {
   const status = statusEl ? statusEl.value : '';
 
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/students', {
+    const response = await fetch(`${API_BASE}/api/students`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const students = await response.json();
@@ -3556,7 +3561,7 @@ async function filterPaymentHistory() {
     const currentMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
 
     for (const student of students) {
-      const payResp = await fetch(`https://bharathashetra.onrender.com/api/payments/student/${student.id}`, {
+      const payResp = await fetch(`${API_BASE}/api/payments/student/${student.id}`, {
         headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
       });
       const payData = await payResp.json();
@@ -3652,14 +3657,14 @@ async function filterPaymentHistory() {
 // Load payment balances for all students
 async function loadPaymentBalances() {
   try {
-    const response = await fetch('https://bharathashetra.onrender.com/api/students', {
+    const response = await fetch(`${API_BASE}/api/students`, {
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
     const students = await response.json();
 
     let html = '';
     for (const student of students) {
-      const payResp = await fetch(`https://bharathashetra.onrender.com/api/payments/student/${student.id}/current-month`, {
+      const payResp = await fetch(`${API_BASE}/api/payments/student/${student.id}/current-month`, {
         headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
       });
       const payData = await payResp.json();
@@ -3860,7 +3865,7 @@ async function deletePayment(paymentId) {
   if (!confirm('Delete this payment record?')) return;
 
   try {
-    const response = await fetch(`https://bharathashetra.onrender.com/api/payments/${paymentId}`, {
+    const response = await fetch(`${API_BASE}/api/payments/${paymentId}`, {
       method: 'DELETE',
       headers: {'Authorization': 'Bearer ' + localStorage.getItem('authToken')}
     });
