@@ -6,6 +6,58 @@ from datetime import datetime
 
 contact_bp = Blueprint('contact', __name__)
 
+@contact_bp.route('/public-inquiry', methods=['POST'])
+def public_inquiry():
+    """Inquiry from the public website - no login required.
+
+    Lands in the same admin Messages tab as parent messages, prefixed so it's
+    obvious it came from a stranger rather than an enrolled family.
+    """
+    data = request.get_json() or {}
+
+    # Honeypot: a hidden field real users never see or fill. Bots fill every
+    # input, so anything here is spam. Return 201 so the bot thinks it worked.
+    if (data.get('website') or '').strip():
+        return jsonify({'message': 'Thank you for your message'}), 201
+
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip()
+    message = (data.get('message') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    location = (data.get('location') or '').strip()
+
+    if not name or not email or not message:
+        return jsonify({'error': 'Name, email, and message are required'}), 400
+    if '@' not in email or '.' not in email:
+        return jsonify({'error': 'Please enter a valid email address'}), 400
+
+    # Bound the sizes so a bad actor can't write huge rows
+    if len(name) > 120 or len(email) > 120 or len(message) > 5000:
+        return jsonify({'error': 'Submission is too long'}), 400
+
+    header = []
+    if phone:
+        header.append(f"Phone: {phone}")
+    if location:
+        header.append(f"Preferred studio: {location}")
+    body = ("\n".join(header) + "\n\n" + message) if header else message
+
+    subject = f'Website inquiry — {location}' if location else 'Website inquiry'
+
+    try:
+        db.session.add(ContactMessage(
+            parent_name=name,
+            parent_email=email,
+            subject=subject[:200],
+            message=body
+        ))
+        db.session.commit()
+        return jsonify({'message': 'Thank you - we will be in touch soon.'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Could not send message. Please try again.'}), 500
+
+
 @contact_bp.route('/messages', methods=['POST'])
 @jwt_required()
 def send_message():

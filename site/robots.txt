@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# The parent portal is private - no value in indexing a login screen
+Disallow: /admin
+
+Sitemap: https://bharathashetra.org/sitemap.xml
