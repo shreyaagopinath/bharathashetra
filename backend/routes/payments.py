@@ -9,6 +9,33 @@ import json
 payments_bp = Blueprint('payments', __name__)
 
 DEFAULT_MONTHLY_RATE = 80.0
+DEFAULT_RECITAL_FEE = 100.0
+
+# Recital fees are stored as Payment rows with month_paid_for set to
+# "recital-<year>" instead of "YYYY-MM". Everything parent-facing filters on a
+# real calendar month, so recital records are invisible there and never affect
+# a family's balance. RECITAL_PREFIX is the single source of truth for that.
+RECITAL_PREFIX = 'recital-'
+
+
+def recital_season(year=None):
+    from datetime import date
+    return f"{RECITAL_PREFIX}{year or date.today().year}"
+
+
+def is_recital_key(month_paid_for):
+    return bool(month_paid_for) and str(month_paid_for).startswith(RECITAL_PREFIX)
+
+
+def get_recital_fee():
+    """Recital fee per student. Editable in admin Settings."""
+    setting = Setting.query.filter_by(key='recital_fee').first()
+    if setting:
+        try:
+            return float(setting.value)
+        except (TypeError, ValueError):
+            pass
+    return DEFAULT_RECITAL_FEE
 
 
 def get_monthly_rate():
@@ -131,6 +158,176 @@ def get_all_payments():
 
     return jsonify(rows), 200
 
+@payments_bp.route('/recital/fee', methods=['GET'])
+@jwt_required()
+def get_recital_fee_route():
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+    return jsonify({'recital_fee': get_recital_fee()}), 200
+
+
+@payments_bp.route('/recital/fee', methods=['PUT'])
+@jwt_required()
+def set_recital_fee():
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    data = request.get_json() or {}
+    try:
+        fee = float(data.get('recital_fee'))
+        if fee < 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return jsonify({'error': 'recital_fee must be a non-negative number'}), 400
+
+    setting = Setting.query.filter_by(key='recital_fee').first()
+    if setting:
+        setting.value = str(fee)
+    else:
+        db.session.add(Setting(key='recital_fee', value=str(fee)))
+    db.session.commit()
+    return jsonify({'message': 'Recital fee updated', 'recital_fee': fee}), 200
+
+
+@payments_bp.route('/recital/roster', methods=['GET'])
+@jwt_required()
+def recital_roster():
+    """Every student + recital payment status. Admin only.
+
+    Mirrors the monthly payment roster: one row per student so unpaid students
+    appear even with no payment record.
+    """
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    season = request.args.get('season') or recital_season()
+    fee = get_recital_fee()
+
+    students = Student.query.order_by(Student.name).all()
+    payments = Payment.query.filter_by(month_paid_for=season).all()
+    by_student = {p.student_id: p for p in payments}
+
+    PAID_STATES = ('paid', 'completed', 'success', 'succeeded')
+
+    rows = []
+    for s in students:
+        p = by_student.get(s.id)
+        is_paid = bool(p and (p.status or '').lower() in PAID_STATES)
+        rows.append({
+            'payment_id': p.id if p else None,
+            'student_id': s.id,
+            'student_name': s.name,
+            'parent_email': s.parent_email or s.email,
+            'class_day': s.class_day,
+            'class_time': s.class_time,
+            'season': season,
+            'amount': (p.amount if p else 0) or 0,
+            'payment_method': p.payment_method if p else None,
+            'payment_date': p.payment_date.isoformat() if (p and p.payment_date) else None,
+            'notes': p.notes if p else None,
+            'status': 'paid' if is_paid else 'unpaid'
+        })
+
+    class_day = request.args.get('class_day')
+    class_time = request.args.get('class_time')
+    status = request.args.get('status')
+    if class_day:
+        rows = [r for r in rows if r['class_day'] == class_day]
+    if class_time:
+        rows = [r for r in rows if (r['class_time'] or '').lower() == class_time.lower()]
+    if status in ('paid', 'unpaid'):
+        rows = [r for r in rows if r['status'] == status]
+
+    return jsonify({
+        'season': season,
+        'recital_fee': fee,
+        'students': rows
+    }), 200
+
+
+@payments_bp.route('/recital/mark-paid', methods=['POST'])
+@jwt_required()
+def recital_mark_paid():
+    """Record a recital payment. Kept entirely out of monthly tuition."""
+    from datetime import datetime as dt
+
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    data = request.get_json() or {}
+    student_id = data.get('student_id')
+    if not student_id:
+        return jsonify({'error': 'student_id required'}), 400
+
+    student = Student.query.get(student_id)
+    if not student:
+        return jsonify({'error': 'Student not found'}), 404
+
+    season = data.get('season') or recital_season()
+    amount = data.get('amount')
+    try:
+        amount = float(amount) if amount is not None else get_recital_fee()
+    except (TypeError, ValueError):
+        return jsonify({'error': 'amount must be a number'}), 400
+
+    try:
+        existing = Payment.query.filter_by(student_id=student_id, month_paid_for=season).first()
+        if existing:
+            existing.amount = amount
+            existing.payment_date = dt.utcnow()
+            existing.payment_method = data.get('payment_method', 'cash')
+            existing.status = 'completed'
+            existing.late_fee_applied = 0
+            existing.notes = data.get('notes', 'Recital fee')
+        else:
+            db.session.add(Payment(
+                student_id=student_id,
+                amount=amount,
+                payment_date=dt.utcnow(),
+                payment_method=data.get('payment_method', 'cash'),
+                month_paid_for=season,
+                status='completed',
+                late_fee_applied=0,
+                notes=data.get('notes', 'Recital fee')
+            ))
+        db.session.commit()
+        return jsonify({
+            'message': f'Recital payment recorded for {student.name}',
+            'student_id': student_id,
+            'season': season,
+            'amount': amount
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@payments_bp.route('/recital/<int:student_id>', methods=['DELETE'])
+@jwt_required()
+def recital_unmark(student_id):
+    """Undo a recital payment (admin only)."""
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'error': 'Admin access required'}), 403
+
+    season = request.args.get('season') or recital_season()
+    payment = Payment.query.filter_by(student_id=student_id, month_paid_for=season).first()
+    if not payment:
+        return jsonify({'error': 'No recital payment found'}), 404
+
+    try:
+        db.session.delete(payment)
+        db.session.commit()
+        return jsonify({'message': 'Recital payment removed'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
 @payments_bp.route('/family-summary', methods=['GET'])
 @jwt_required()
 def family_summary():
@@ -210,7 +407,15 @@ def get_student_payments(student_id):
     if not student:
         return jsonify({'error': 'Student not found'}), 404
 
-    payments = Payment.query.filter_by(student_id=student_id).order_by(Payment.payment_date.desc()).all()
+    # Exclude recital fees - this feeds the parent's payment history and
+    # 12-month tuition grid, where a recital charge would be confusing and
+    # would misrepresent what they owe.
+    payments = [p for p in Payment.query
+                .filter_by(student_id=student_id)
+                .order_by(Payment.payment_date.desc())
+                .all()
+                if not is_recital_key(p.month_paid_for)]
+
     return jsonify({
         'student_id': student_id,
         'payments': [{

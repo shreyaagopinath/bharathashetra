@@ -607,7 +607,7 @@ button[style*="background:var(--am)"] {
           <div class="fg"><label class="fl">Method</label><select class="fs" id="payMethod"><option>cash</option><option>zelle</option><option>check</option></select></div>
           <div class="fg"><label class="fl">Notes</label><input class="fi" id="payNotes" placeholder="Optional"></div>
         </div>
-        <button class="bgld" onclick="recordMonthlyPayment()" style="width:100%;background:var(--gn)">✓ Mark Paid ($80.00)</button>
+        <button onclick="recordMonthlyPayment()" style="width:100%;background:transparent;border:1px solid var(--gn);color:var(--gn);padding:11px 20px;border-radius:6px;cursor:pointer;font-family:'Raleway',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase">✓ Mark Paid ($80.00)</button>
       </div>
     </div>
     <div class="af" style="margin-top:20px">
@@ -664,7 +664,11 @@ button[style*="background:var(--am)"] {
       <div class="aft">Recital Fee Amount</div>
       <div class="frow">
         <div class="fg"><label class="fl">Amount ($)</label><input class="fi" id="recitalAmount" type="number" step="0.01" value="100" placeholder="Enter recital fee amount"></div>
+        <div class="fg"><label class="fl">&nbsp;</label>
+          <button onclick="saveRecitalFee()" style="width:100%;background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:10px 20px;border-radius:6px;cursor:pointer;font-family:'Raleway',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px">Save Fee</button>
+        </div>
       </div>
+      <div style="font-size:13px;color:rgba(245,230,192,.5)">Recital fees are tracked separately and never appear in a parent's monthly balance.</div>
     </div>
     <div class="af">
       <div class="aft">Search & Record Payment</div>
@@ -679,12 +683,48 @@ button[style*="background:var(--am)"] {
           <div class="fg"><label class="fl">Method</label><select class="fs" id="recitalMethod"><option>cash</option><option>check</option></select></div>
           <div class="fg"><label class="fl">Notes</label><input class="fi" id="recitalNotes" placeholder="Optional"></div>
         </div>
-        <button class="bgld" onclick="recordRecitalPayment()" style="width:100%;background:var(--am)">✓ Mark Paid</button>
+        <button onclick="recordRecitalPayment()" style="width:100%;background:transparent;border:1px solid var(--am);color:var(--am);padding:11px 20px;border-radius:6px;cursor:pointer;font-family:'Raleway',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase">✓ Mark Paid</button>
       </div>
     </div>
     <div class="af" style="margin-top:20px">
-      <div class="aft">Recital Payment Status</div>
-      <div id="recitalStatusGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:15px 0"></div>
+      <div class="aft">Filter Recital Payments</div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Class Day</label>
+          <select class="fs" id="filterRecitalDay" onchange="filterRecital()">
+            <option value="">All Classes</option>
+            <option>Monday</option>
+            <option>Tuesday</option>
+            <option>Wednesday</option>
+            <option>Thursday</option>
+            <option>Friday</option>
+            <option>Saturday</option>
+            <option>Sunday</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Class Time</label>
+          <select class="fs" id="filterRecitalTime" onchange="filterRecital()">
+            <option value="">All Times</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Payment Status</label>
+          <select class="fs" id="filterRecitalStatus" onchange="filterRecital()">
+            <option value="">All Statuses</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+        </div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="af" style="margin-top:20px">
+      <div class="aft">Recital Roster</div>
+      <div class="tw">
+        <div class="th-row" style="grid-template-columns:1.4fr 1.2fr .8fr 1fr .9fr 1.2fr"><div class="th">Student</div><div class="th">Class</div><div class="th">Amount</div><div class="th">Date Paid</div><div class="th">Status</div><div class="th">Action</div></div>
+        <div id="recitalRosterList"><div class="lds"><div class="spin"></div></div></div>
+      </div>
     </div>
   </div>
 
@@ -741,7 +781,7 @@ button[style*="background:var(--am)"] {
     <div class="af">
       <div class="aft">+ Register Student</div>
       <div class="frow">
-        <div class="fg"><label class="fl">Name</label><input class="fi" id="regName" placeholder="Full name"></div>
+        <div class="fg"><label class="fl">Name</label><input class="fi" id="regName" placeholder="Full name" autocomplete="off"></div>
         <div class="fg"><label class="fl">Email</label><input class="fi" id="regEmail" type="email"></div>
       </div>
       <div class="frow">
@@ -1220,7 +1260,7 @@ function showSec(id, btn) {
   if (id === 'ann') loadAnnouncements();
   if (id === 'reg') loadStudents();
   if (id === 'messages') loadMessages();
-  if (id === 'recital') loadStudentsForRecital();
+  if (id === 'recital') { loadStudentsForRecital(); loadRecitalRoster(); }
   if (id === 'lookup') loadStudentsForPayment();
   if (id === 'pay') {
     loadStudentsForPayment();
@@ -3147,6 +3187,18 @@ async function quickMarkPaid(studentId) {
   }
 }
 
+// ========================= RECITAL FEES =========================
+// Recital payments post to their own endpoint, which stores them under a
+// "recital-<year>" key rather than a calendar month. They are deliberately
+// invisible to parents and excluded from monthly balances.
+//
+// (This previously called /api/payments/mark-paid, which wrote a CURRENT-MONTH
+// payment - so recording a recital fee silently marked that student's monthly
+// tuition as paid.)
+
+let allRecital = [];
+let recitalFee = 100;
+
 async function recordRecitalPayment() {
   if (!selectedRecitalStudentId) {
     toast('Please select a student', 'error');
@@ -3159,38 +3211,164 @@ async function recordRecitalPayment() {
     return;
   }
 
-  const method = document.getElementById('recitalMethod').value;
-  const notes = document.getElementById('recitalNotes').value;
+  await markRecitalPaid(
+    selectedRecitalStudentId,
+    amount,
+    document.getElementById('recitalMethod').value,
+    document.getElementById('recitalNotes').value
+  );
 
+  document.getElementById('recitalSearchInput').value = '';
+  document.getElementById('recitalNotes').value = '';
+  document.getElementById('selectedRecitalStudent').style.display = 'none';
+  selectedRecitalStudentId = null;
+}
+
+async function markRecitalPaid(studentId, amount, method, notes) {
+  showLoading();
   try {
-    const response = await fetch(`${API_BASE}/api/payments/mark-paid`, {
+    const resp = await fetch(`${API_BASE}/api/payments/recital/mark-paid`, {
       method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
-        'Content-Type': 'application/json'
-      },
+      headers: authHeaders(),
       body: JSON.stringify({
-        student_id: selectedRecitalStudentId,
-        amount: amount,
-        payment_method: method,
-        notes: 'Recital Fee' + (notes ? ' - ' + notes : '')
+        student_id: studentId,
+        amount: amount != null ? amount : recitalFee,
+        payment_method: method || 'cash',
+        notes: notes ? 'Recital fee - ' + notes : 'Recital fee'
       })
     });
-
-    const data = await response.json();
-    if (response.ok) {
-      toast('Recital payment recorded!', 'success');
-      document.getElementById('recitalSearchInput').value = '';
-      document.getElementById('recitalNotes').value = '';
-      document.getElementById('selectedRecitalStudent').style.display = 'none';
-      selectedRecitalStudentId = null;
-    } else {
-      toast('Error: ' + (data.error || 'Failed to record payment'), 'error');
-    }
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+    toast('Recital payment recorded', 'success');
+    await loadRecitalRoster();
   } catch (e) {
-    console.error('Error:', e);
-    toast('Error: ' + e.message, 'error');
+    toast('Failed: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
   }
+}
+
+async function unmarkRecitalPaid(studentId) {
+  if (!confirm('Remove this recital payment?')) return;
+  showLoading();
+  try {
+    const resp = await fetch(`${API_BASE}/api/payments/recital/${studentId}`, {
+      method: 'DELETE',
+      headers: authHeaders(false)
+    });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+    toast('Recital payment removed', 'success');
+    await loadRecitalRoster();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function saveRecitalFee() {
+  const fee = parseFloat(document.getElementById('recitalAmount').value);
+  if (!fee || fee <= 0) { toast('Enter a valid amount', 'error'); return; }
+
+  showLoading();
+  try {
+    const resp = await fetch(`${API_BASE}/api/payments/recital/fee`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ recital_fee: fee })
+    });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(body.error || `HTTP ${resp.status}`);
+    recitalFee = body.recital_fee;
+    toast(`Recital fee set to $${recitalFee.toFixed(2)}`, 'success');
+    await loadRecitalRoster();
+  } catch (e) {
+    toast('Failed: ' + e.message, 'error');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function loadRecitalRoster() {
+  showLoading();
+  try {
+    const resp = await fetch(`${API_BASE}/api/payments/recital/roster`, { headers: authHeaders(false) });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    allRecital = Array.isArray(data.students) ? data.students : [];
+    recitalFee = data.recital_fee;
+
+    const feeField = document.getElementById('recitalAmount');
+    if (feeField) feeField.value = recitalFee;
+
+    const timeSel = document.getElementById('filterRecitalTime');
+    if (timeSel) {
+      const times = [...new Set(allRecital.map(r => r.class_time).filter(Boolean))].sort();
+      const cur = timeSel.value;
+      timeSel.innerHTML = '<option value="">All Times</option>' +
+        times.map(t => `<option ${t === cur ? 'selected' : ''}>${t}</option>`).join('');
+    }
+
+    filterRecital();
+  } catch (e) {
+    console.error('Error loading recital roster:', e);
+    allRecital = [];
+    document.getElementById('recitalRosterList').innerHTML =
+      '<div class="tr"><div class="ctm" style="color:#d9534f">Could not load recital roster.</div></div>';
+  } finally {
+    showLoading(false);
+  }
+}
+
+function filterRecital() {
+  const day = (document.getElementById('filterRecitalDay') || {}).value || '';
+  const time = ((document.getElementById('filterRecitalTime') || {}).value || '').trim().toLowerCase();
+  const status = (document.getElementById('filterRecitalStatus') || {}).value || '';
+
+  let rows = allRecital.slice();
+  if (day) rows = rows.filter(r => r.class_day === day);
+  if (time) rows = rows.filter(r => (r.class_time || '').toLowerCase().includes(time));
+  if (status) rows = rows.filter(r => r.status === status);
+
+  renderRecital(rows);
+}
+
+function renderRecital(rows) {
+  const paidCount = rows.filter(r => r.status === 'paid').length;
+  const collected = rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+  const summary = `<div style="padding:10px 12px;margin-bottom:10px;background:rgba(201,153,58,.08);border-radius:6px;font-size:14px">
+      <strong>${rows.length}</strong> student(s) &nbsp;·&nbsp;
+      <span style="color:#5cb85c">${paidCount} paid</span> &nbsp;·&nbsp;
+      <span style="color:#d9534f">${rows.length - paidCount} unpaid</span> &nbsp;·&nbsp;
+      collected: <strong>$${collected.toFixed(2)}</strong>
+    </div>`;
+
+  const html = rows.map(r => {
+    const badge = r.status === 'paid'
+      ? '<span style="color:#5cb85c">✓ Paid</span>'
+      : '<span style="color:#d9534f">✕ Unpaid</span>';
+    const cls = [r.class_day, r.class_time].filter(Boolean).join(' ') || '—';
+    const date = r.payment_date ? new Date(r.payment_date).toLocaleDateString() : '—';
+    const amt = r.status === 'paid' ? `$${(Number(r.amount) || 0).toFixed(2)}` : '—';
+    const action = r.status === 'paid'
+      ? `<button onclick="unmarkRecitalPaid(${r.student_id})" style="background:transparent;border:1px solid rgba(245,230,192,.4);color:rgba(245,230,192,.7);padding:3px 8px;font-size:12px;border-radius:4px;cursor:pointer">Undo</button>`
+      : `<button onclick="markRecitalPaid(${r.student_id})" style="background:transparent;border:1px solid var(--bgo);color:var(--bgo);padding:3px 8px;font-size:12px;border-radius:4px;cursor:pointer">Mark Paid</button>`;
+    return `
+      <div class="tr" style="grid-template-columns:1.4fr 1.2fr .8fr 1fr .9fr 1.2fr">
+        <div class="snm">${r.student_name || '(unnamed)'}</div>
+        <div class="ctm">${cls}</div>
+        <div class="ctm">${amt}</div>
+        <div class="ctm">${date}</div>
+        <div class="ctm">${badge}</div>
+        <div class="ctm">${action}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('recitalRosterList').innerHTML =
+    summary + (html || '<div class="tr"><div class="ctm">No students match these filters</div></div>');
 }
 
 async function markPaymentPaid(directStudentId) {

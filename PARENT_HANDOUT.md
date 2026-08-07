@@ -2,7 +2,7 @@
 
 Check payments, attendance, class times, photos, and announcements.
 
-**Website:** https://bharathashetra.onrender.com
+**Website:** https://portal.bharathashetra.org
 
 ---
 
@@ -53,6 +53,5 @@ Click the **install icon** in the address bar, or open the **⋮** menu and choo
 
 ## Notes
 
-- **First load may take up to a minute.** The site sleeps when unused and has to wake up. It's quick after that.
 - **Change your PIN** after your first sign-in: **Settings → Change Your PIN**.
 - Payment is **$80 per dancer per month**, due by the **10th**. Two dancers is $160.
