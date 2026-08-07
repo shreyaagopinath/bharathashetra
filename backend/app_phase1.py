@@ -126,21 +126,24 @@ def create_app():
             # SQLite ignores length limits so this only ever broke on Postgres.
             if db.engine.url.get_backend_name() == 'postgresql':
                 widen = [
-                    ('photos', 'photo_url'),
-                    ('photo_albums', 'cover_photo_url'),
-                    ('videos', 'video_url'),
+                    ('photos', 'photo_url', 'TEXT'),
+                    ('photo_albums', 'cover_photo_url', 'TEXT'),
+                    ('videos', 'video_url', 'TEXT'),
+                    # Holds "recital-<year>" as well as "YYYY-MM"
+                    ('payments', 'month_paid_for', 'VARCHAR(32)'),
+                    ('students', 'class_time', 'VARCHAR(60)'),
                 ]
-                for table, column in widen:
+                for table, column, coltype in widen:
                     try:
                         db.session.execute(
-                            f'ALTER TABLE {table} ALTER COLUMN {column} TYPE TEXT'
+                            f'ALTER TABLE {table} ALTER COLUMN {column} TYPE {coltype}'
                         )
                         db.session.commit()
                     except Exception as mig_err:
                         db.session.rollback()
-                        # Table may not exist yet, or already be TEXT - both fine
+                        # Table may not exist yet, or already be wide - both fine
                         print(f"  (schema check {table}.{column}: {str(mig_err)[:90]})")
-                print("✓ Schema check complete (text columns widened)")
+                print("✓ Schema check complete (columns widened)")
             admin_exists = db.session.query(User).filter_by(role='admin').first()
             if not admin_exists:
                 admin = User(email='admin@dance.local', role='admin')

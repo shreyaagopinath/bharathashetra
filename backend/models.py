@@ -49,7 +49,9 @@ class Student(db.Model):
     parent_email = db.Column(db.String(120))  # For CSV import
     parent_pin = db.Column(db.String(4))  # 4-digit PIN for parent login
     class_day = db.Column(db.String(20))  # Monday, Tuesday, etc.
-    class_time = db.Column(db.String(20))  # HH:MM format
+    # Free-text field - admins type things like "3:00 PM - 4:30 PM" (17 chars),
+    # which was uncomfortably close to the old 20-char limit.
+    class_time = db.Column(db.String(60))
     date_of_birth = db.Column(db.Date)
     phone = db.Column(db.String(20))
     email = db.Column(db.String(120))
@@ -126,7 +128,10 @@ class Payment(db.Model):
     payment_method = db.Column(db.String(50))  # zelle, cash, card
     transaction_id = db.Column(db.String(100), unique=True, index=True)
     status = db.Column(db.String(20), default='completed')  # pending, completed, failed
-    month_paid_for = db.Column(db.String(7))  # e.g., "2024-10" (year-month format)
+    # "2024-10" for monthly tuition, or "recital-2026" for recital fees.
+    # Must be wider than 7 chars: Postgres enforces VARCHAR limits (SQLite does
+    # not), so a String(7) here rejected every recital payment with a 500.
+    month_paid_for = db.Column(db.String(32))
     late_fee_applied = db.Column(db.Float, default=0)  # e.g., 10.00
     notes = db.Column(db.Text)
 
