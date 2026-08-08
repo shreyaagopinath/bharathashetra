@@ -27,12 +27,23 @@ The parent portal at `portal.bharathashetra.org` is untouched by any of this.
 Drop files into `site/images/` with these exact names. Anything missing shows a
 labeled placeholder instead of a broken image, so you can add them gradually.
 
-| File | Used for | Suggested size |
-|---|---|---|
-| `logo.png` | Nav logo | 200×200, square |
-| `instructor.jpg` | About section portrait | 800×1000, portrait |
-| `gallery-1.jpg` … `gallery-6.jpg` | Performance gallery | 1200×900, landscape |
-| `event-1.jpg` … `event-3.jpg` | Event posters | 900×1200, portrait |
+| File | Used for | Suggested size | Status |
+|---|---|---|---|
+| `logo.png` | Nav logo | 160×160, square | done |
+| `school-stage.jpg` | Wide banner under "Our School" | 1800×760, landscape | done |
+| `instructor.jpg` | Teacher portrait | 900×1125, portrait | done |
+| `arangetram-1.jpg` … | Arangetram slideshow | 1500×1000, landscape | needed |
+| `gallery-1.jpg` … `gallery-6.jpg` | Performance gallery | 1200×900, landscape | needed |
+| `event-1.jpg` … `event-3.jpg` | Event posters | 900×1200, portrait | needed |
+
+### Adding dancers to the arangetram slideshow
+
+Each dancer is one `<figure class="slide">` block in the Arangetram section.
+Copy an existing block, change the image number and the caption, and add the
+photo as `arangetram-4.jpg`, `arangetram-5.jpg`, and so on. The dots and
+arrows adjust themselves — no other changes needed.
+
+Ask each dancer and their family before publishing a name alongside a photo.
 
 **Before publishing photos of students:** these are other families' children on a
 public page. Get permission from the parents of anyone recognizable, or favor
