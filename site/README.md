@@ -33,8 +33,21 @@ labeled placeholder instead of a broken image, so you can add them gradually.
 | `school-stage.jpg` | Wide banner under "Our School" | 1800×760, landscape | done |
 | `instructor.jpg` | Teacher portrait | 900×1125, portrait | done |
 | `arangetram-1.jpg` … | Arangetram slideshow | 1500×1000, landscape | needed |
-| `gallery-1.jpg` … `gallery-6.jpg` | Performance gallery | 1200×900, landscape | needed |
+| `gallery-1.jpg` … `gallery-16.jpg` | Performance gallery | ~1400px wide, any shape | needed |
 | `event-1.jpg` … `event-3.jpg` | Event posters | 900×1200, portrait | needed |
+
+### The performance gallery
+
+Sixteen slots are wired up (`gallery-1.jpg` … `gallery-16.jpg`). **Any slot with
+no matching file removes itself when the page loads**, so you can add photos a
+few at a time and the grid always looks intentional — no broken images, no gaps.
+
+- Photos can be portrait or landscape, mixed freely — it's a masonry layout,
+  so each keeps its own proportions rather than being cropped to a square.
+- The first 9 show by default; beyond that a "Show All Photos" button appears.
+- Clicking any photo opens a full-screen viewer with arrows, arrow keys,
+  swipe on phones, and Escape to close.
+- To go past 16, copy another `<figure>` line in the gallery block.
 
 ### Adding dancers to the arangetram slideshow
 
