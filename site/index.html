@@ -436,7 +436,12 @@ h2{
 .events{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px}
 .event{border:1px solid var(--hair-2);background:rgba(20,8,7,.5);transition:border-color .4s,transform .4s}
 .event:hover{border-color:var(--hair);transform:translateY(-4px)}
-.event .poster,.event .ph{width:100%;aspect-ratio:3/4;object-fit:cover;background:rgba(0,0,0,.34)}
+/* contain, not cover: posters carry dates and venue text that must not be
+   cropped, and they arrive in assorted aspect ratios. */
+.event .poster,.event .ph{
+  width:100%;aspect-ratio:3/4;object-fit:contain;
+  background:#0F0605;padding:10px;
+}
 .event .body{padding:26px 26px 30px}
 .event .when{
   font-family:'Raleway',sans-serif;font-size:10px;letter-spacing:.3em;
@@ -1013,27 +1018,27 @@ footer{border-top:1px solid var(--hair-2);margin-top:40px}
   <div class="events">
     <!-- ===== EDIT ME: one block per event; posters go in site/images/ ===== -->
     <article class="event">
-      <img class="poster" src="images/event-1.jpg" alt="Annual Recital poster" loading="lazy" onerror="this.outerHTML='&lt;div class=\'ph\'&gt;event-1.jpg&lt;/div&gt;'">
+      <img class="poster" src="images/event-1.jpg" alt="Natyaarpanam 2025 annual dance recital poster" loading="lazy">
       <div class="body">
-        <div class="when">2025</div>
-        <h3>Annual Recital</h3>
-        <p>A full evening of classical repertoire performed before family and friends.</p>
+        <div class="when">October 2025</div>
+        <h3>Natyaarpanam 2025</h3>
+        <p>Our annual dance recital &mdash; a full afternoon of classical repertoire performed by students of every level.</p>
       </div>
     </article>
     <article class="event">
-      <img class="poster" src="images/event-2.jpg" alt="Community Showcase poster" loading="lazy" onerror="this.outerHTML='&lt;div class=\'ph\'&gt;event-2.jpg&lt;/div&gt;'">
+      <img class="poster" src="images/event-2.jpg" alt="Vayuputra, The Son of the Wind, performance poster" loading="lazy">
       <div class="body">
-        <div class="when">2024</div>
-        <h3>Community Showcase</h3>
-        <p>A celebration of classical dance shared with the wider community.</p>
+        <div class="when">May 2024</div>
+        <h3>Vayuputra</h3>
+        <p>Bharathashetra presented Kalaimamani Madurai R. Muralidharan in <em>Vayuputra &mdash; The Son of the Wind</em>.</p>
       </div>
     </article>
     <article class="event">
-      <img class="poster" src="images/event-3.jpg" alt="Arangetram poster" loading="lazy" onerror="this.outerHTML='&lt;div class=\'ph\'&gt;event-3.jpg&lt;/div&gt;'">
+      <img class="poster" src="images/event-3.jpg" alt="Natyaarpanam 2024 annual dance recital poster" loading="lazy">
       <div class="body">
-        <div class="when">2024</div>
-        <h3>Arangetram</h3>
-        <p>Marking a dancer's graduation to solo performance after years of study.</p>
+        <div class="when">February 2024</div>
+        <h3>Natyaarpanam 2024</h3>
+        <p>The 2024 annual recital &mdash; students taking the stage before family, friends, and community.</p>
       </div>
     </article>
   </div>
