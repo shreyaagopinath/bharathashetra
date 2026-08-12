@@ -50,10 +50,26 @@
     "https://www.instagram.com/bharathashetra/",
     "https://www.facebook.com/LearnBharathanatyam/"
   ],
+  "founder": {
+    "@type": "Person",
+    "name": "Srishambavi Gopinath",
+    "jobTitle": "Bharatanatyam Instructor and Founder",
+    "award": [
+      "Asia Book of Records — Madurai R. Muralidharan's 50 Jathis Challenge, 2021",
+      "India Book of Records — Madurai R. Muralidharan's 50 Jathis Challenge, 2021"
+    ],
+    "sameAs": ["https://www.facebook.com/srishambavi.gopinath/"]
+  },
   "employee": {
     "@type": "Person",
-    "name": "Shambavi Gopinath",
-    "jobTitle": "Bharatanatyam Instructor"
+    "name": "Srishambavi Gopinath",
+    "jobTitle": "Bharatanatyam Instructor and Founder"
+  },
+  "subjectOf": {
+    "@type": "Article",
+    "name": "Daily Inspiration: Meet Srishambavi Gopinath",
+    "url": "https://voyagedallas.com/interview/daily-inspiration-meet-srishambavi-gopinath/",
+    "publisher": { "@type": "Organization", "name": "Voyage Dallas Magazine" }
   },
   "areaServed": [
     { "@type": "City", "name": "Flower Mound" },
@@ -358,6 +374,25 @@ h2{
   letter-spacing:.07em;color:var(--gold-lt);margin-bottom:14px;
 }
 .teacher p{color:var(--muted)}
+
+/* ---- teacher credentials ---- */
+.credentials{margin-top:32px;display:flex;flex-direction:column;gap:2px}
+.cred{
+  padding:18px 22px;border-left:2px solid var(--gold);
+  background:rgba(110,20,20,.14);
+}
+.cred-lbl{
+  font-family:'Raleway',sans-serif;font-size:11.5px;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:8px;
+}
+.cred-body{color:var(--cream);font-size:18.5px;line-height:1.7}
+.cred-body strong{color:var(--gold-lt);font-weight:600}
+.cred-body a{
+  color:var(--cream);text-decoration:none;
+  border-bottom:1px solid var(--hair);transition:color .3s,border-color .3s;
+}
+.cred-body a:hover{color:var(--gold-lt);border-bottom-color:var(--gold)}
+.cred-body a::after{content:' ↗';color:var(--gold);font-size:15px}
 
 /* ---- pillars ---- */
 .pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:2px;background:var(--hair-2)}
@@ -765,11 +800,33 @@ footer{border-top:1px solid var(--hair-2);margin-top:40px}
     </div>
     <div>
       <div class="eyebrow" style="margin-bottom:18px">Our Teacher</div>
-      <!-- ===== EDIT ME: lineage, years teaching, credentials, arangetram ===== -->
-      <h2 style="text-align:left">Shambavi Gopinath</h2>
-      <p style="color:var(--muted);margin-top:22px">Trained in the classical Bharatanatyam tradition, Shambavi brings years of performance and teaching experience to every class.</p>
-      <p style="color:var(--muted);margin-top:18px">Students receive individual attention within a supportive group setting, building technique, artistry, and confidence over time. Her teaching emphasizes not only precision of movement but understanding of the stories, music, and devotion the form carries.</p>
+      <!-- ===== EDIT ME: verify every detail below ===== -->
+      <h2 style="text-align:left">Srishambavi Gopinath</h2>
+
+      <p style="color:var(--muted);margin-top:22px">Srishambavi began learning Bharatanatyam at the age of four, and went on to train intensively in the form for more than twelve years.</p>
+
+      <p style="color:var(--muted);margin-top:18px">She founded Bharathashetra School of Dance with just three students. It has grown steadily since &mdash; almost entirely by word of mouth, as families who found something worthwhile told others.</p>
+
+      <p style="color:var(--muted);margin-top:18px">Her teaching emphasizes not only precision of movement but understanding of the stories, music, and devotion the form carries. Students receive individual attention within a supportive group setting, building technique, artistry, and confidence over time.</p>
+
       <p style="color:var(--muted);margin-top:18px">She teaches at both the Flower Mound and Keller studios.</p>
+
+      <div class="credentials">
+        <div class="cred">
+          <div class="cred-lbl">Recognition</div>
+          <div class="cred-body">
+            Performed in Madurai R. Muralidharan's <strong>50 Jathis Challenge</strong> &mdash;
+            125+ dancers worldwide performing together for the
+            <strong>Asia Book of Records</strong> and <strong>India Book of Records</strong>, January 2021.
+          </div>
+        </div>
+        <div class="cred">
+          <div class="cred-lbl">Featured In</div>
+          <div class="cred-body">
+            <a href="https://voyagedallas.com/interview/daily-inspiration-meet-srishambavi-gopinath/" target="_blank" rel="noopener">Voyage Dallas Magazine &mdash; Daily Inspiration</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
