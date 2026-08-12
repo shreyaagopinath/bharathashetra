@@ -1,5 +1,16 @@
 # Public Website — bharathashetra.org
 
+> ## ⚠️ CURRENTLY HIDDEN FROM SEARCH ENGINES
+>
+> The site is live but blocked from Google while it's being finished.
+>
+> **To launch, do both of these:**
+> 1. In `index.html`, delete the line
+>    `<meta name="robots" content="noindex, nofollow">`
+> 2. In `robots.txt`, delete `Disallow: /` and uncomment `Allow: /`
+>
+> Then push. If you skip these, the site will never appear in search results.
+
 Single-page site. Everything lives in `index.html`; images go in `images/`.
 
 ---

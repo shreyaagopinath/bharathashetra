@@ -1,7 +1,14 @@
-User-agent: *
-Allow: /
+# ============================================================
+# SITE IS HIDDEN FROM SEARCH ENGINES WHILE UNDER CONSTRUCTION
+#
+# BEFORE LAUNCH: delete the "Disallow: /" line below and
+# uncomment the "Allow: /" line, then remove the noindex meta
+# tag from index.html. Otherwise the site will never appear
+# on Google.
+# ============================================================
 
-# The parent portal is private - no value in indexing a login screen
-Disallow: /admin
+User-agent: *
+Disallow: /
+# Allow: /
 
 Sitemap: https://bharathashetra.org/sitemap.xml
