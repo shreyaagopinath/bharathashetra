@@ -581,12 +581,8 @@ h2{
   background:linear-gradient(transparent,rgba(10,4,4,.92));text-align:center;
 }
 .slide .cap b{
-  display:block;font-family:'Cinzel',serif;font-weight:500;font-size:22px;
-  letter-spacing:.05em;color:var(--cream);
-}
-.slide .cap span{
-  display:block;margin-top:6px;font-family:'Raleway',sans-serif;font-size:12.5px;
-  letter-spacing:.3em;text-transform:uppercase;color:var(--gold);
+  display:block;font-family:'Cinzel',serif;font-weight:500;font-size:24px;
+  letter-spacing:.06em;color:var(--cream);
 }
 
 .slide-nav{
@@ -1025,13 +1021,12 @@ footer{border-top:1px solid var(--hair-2);margin-top:40px}
        site/images/ as arangetram-1.jpg, arangetram-2.jpg, and so on.
        Ask each dancer (and their family) before publishing name + photo.
   -->
-  <!-- ===== HIDDEN FOR NOW =====
-       The graduates slideshow is hidden until all ten arangetram photos are
-       ready. To bring it back, delete the word `hidden` from the div below.
-       Photos go in site/images/ as arangetram-1.jpg … arangetram-10.jpg, and
-       any slot without a file removes itself automatically.
+  <!-- ===== EDIT ME =====
+       One <figure class="slide"> per dancer. Photos go in site/images/ as
+       arangetram-1.jpg, arangetram-2.jpg, … Any slot without a matching file
+       removes itself automatically, so extra slots are harmless.
   -->
-  <div class="slideshow" id="slideshow" hidden>
+  <div class="slideshow" id="slideshow">
     <div class="section-head" style="margin-bottom:28px">
       <div class="eyebrow">Our Graduates</div>
       <h2 style="font-size:clamp(22px,2.8vw,32px)">Dancers Who Have Debuted</h2>
@@ -1040,43 +1035,43 @@ footer{border-top:1px solid var(--hair-2);margin-top:40px}
     <div class="slides" id="slides">
       <figure class="slide active" style="background-image:url(images/arangetram-1.jpg)">
         <img src="images/arangetram-1.jpg" alt="Ananya Pradeep performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Ananya Pradeep</b><span>Arangetram</span></figcaption>
+        <figcaption class="cap"><b>Ananya Pradeep</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-2.jpg)">
         <img src="images/arangetram-2.jpg" alt="Harshitha Rakesh performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Harshitha Rakesh</b><span>Arangetram</span></figcaption>
+        <figcaption class="cap"><b>Harshitha Rakesh</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-3.jpg)">
         <img src="images/arangetram-3.jpg" alt="Varsha Harish performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Varsha Harish</b><span>Arangetram</span></figcaption>
+        <figcaption class="cap"><b>Varsha Harish</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-4.jpg)">
         <img src="images/arangetram-4.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
+        <figcaption class="cap"><b>Dancer Name</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-5.jpg)">
         <img src="images/arangetram-5.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
+        <figcaption class="cap"><b>Dancer Name</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-6.jpg)">
         <img src="images/arangetram-6.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
+        <figcaption class="cap"><b>Dancer Name</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-7.jpg)">
         <img src="images/arangetram-7.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
+        <figcaption class="cap"><b>Dancer Name</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-8.jpg)">
         <img src="images/arangetram-8.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
+        <figcaption class="cap"><b>Dancer Name</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-9.jpg)">
         <img src="images/arangetram-9.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
+        <figcaption class="cap"><b>Dancer Name</b></figcaption>
       </figure>
       <figure class="slide" style="background-image:url(images/arangetram-10.jpg)">
         <img src="images/arangetram-10.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
+        <figcaption class="cap"><b>Dancer Name</b></figcaption>
       </figure>
 
       <button class="slide-nav prev" id="slidePrev" aria-label="Previous">&#10094;</button>
