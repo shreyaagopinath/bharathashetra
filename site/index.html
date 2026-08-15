@@ -559,10 +559,23 @@ h2{
 }
 .slide{
   position:absolute;inset:0;opacity:0;transition:opacity .8s ease;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  background-size:cover;background-position:center;
 }
 .slide.active{opacity:1}
-.slide img{width:100%;height:100%;object-fit:cover}
+
+/* Dancers' photos arrive portrait and landscape. Showing each one whole
+   (contain) avoids cropping heads or feet; a blurred, darkened copy of the
+   same image fills the space either side so it never looks letterboxed. */
+.slide::before{
+  content:'';position:absolute;inset:-40px;
+  background-image:inherit;background-size:cover;background-position:center;
+  filter:blur(30px) brightness(.4) saturate(.85);
+}
+.slide img{
+  position:relative;z-index:1;
+  width:100%;height:100%;object-fit:contain;
+}
 .slide .cap{
   position:absolute;left:0;right:0;bottom:0;padding:56px 28px 22px;
   background:linear-gradient(transparent,rgba(10,4,4,.92));text-align:center;
@@ -1025,44 +1038,44 @@ footer{border-top:1px solid var(--hair-2);margin-top:40px}
     </div>
 
     <div class="slides" id="slides">
-      <figure class="slide active">
-        <img src="images/arangetram-1.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide active" style="background-image:url(images/arangetram-1.jpg)">
+        <img src="images/arangetram-1.jpg" alt="Ananya Pradeep performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Ananya Pradeep</b><span>Arangetram</span></figcaption>
       </figure>
-      <figure class="slide">
-        <img src="images/arangetram-2.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide" style="background-image:url(images/arangetram-2.jpg)">
+        <img src="images/arangetram-2.jpg" alt="Harshitha Rakesh performing her arangetram" loading="lazy">
+        <figcaption class="cap"><b>Harshitha Rakesh</b><span>Arangetram</span></figcaption>
+      </figure>
+      <figure class="slide" style="background-image:url(images/arangetram-3.jpg)">
+        <img src="images/arangetram-3.jpg" alt="Varsha Harish performing her arangetram" loading="lazy">
+        <figcaption class="cap"><b>Varsha Harish</b><span>Arangetram</span></figcaption>
+      </figure>
+      <figure class="slide" style="background-image:url(images/arangetram-4.jpg)">
+        <img src="images/arangetram-4.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
       </figure>
-      <figure class="slide">
-        <img src="images/arangetram-3.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide" style="background-image:url(images/arangetram-5.jpg)">
+        <img src="images/arangetram-5.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
       </figure>
-      <figure class="slide">
-        <img src="images/arangetram-4.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide" style="background-image:url(images/arangetram-6.jpg)">
+        <img src="images/arangetram-6.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
       </figure>
-      <figure class="slide">
-        <img src="images/arangetram-5.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide" style="background-image:url(images/arangetram-7.jpg)">
+        <img src="images/arangetram-7.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
       </figure>
-      <figure class="slide">
-        <img src="images/arangetram-6.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide" style="background-image:url(images/arangetram-8.jpg)">
+        <img src="images/arangetram-8.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
       </figure>
-      <figure class="slide">
-        <img src="images/arangetram-7.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide" style="background-image:url(images/arangetram-9.jpg)">
+        <img src="images/arangetram-9.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
       </figure>
-      <figure class="slide">
-        <img src="images/arangetram-8.jpg" alt="Arangetram performance" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
-      </figure>
-      <figure class="slide">
-        <img src="images/arangetram-9.jpg" alt="Arangetram performance" loading="lazy">
-        <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
-      </figure>
-      <figure class="slide">
-        <img src="images/arangetram-10.jpg" alt="Arangetram performance" loading="lazy">
+      <figure class="slide" style="background-image:url(images/arangetram-10.jpg)">
+        <img src="images/arangetram-10.jpg" alt="Dancer Name performing her arangetram" loading="lazy">
         <figcaption class="cap"><b>Dancer Name</b><span>Arangetram &middot; Year</span></figcaption>
       </figure>
 
